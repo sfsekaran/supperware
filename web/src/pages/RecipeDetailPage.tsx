@@ -33,13 +33,18 @@ function formatQuantity(qty: number | null, scale: number): string {
   return val.toFixed(1).replace(/\.0$/, '');
 }
 
-function useWakeLock() {
+function useWakeLock(enabled: boolean) {
   const lock = useRef<WakeLockSentinel | null>(null);
   useEffect(() => {
     if (!('wakeLock' in navigator)) return;
-    navigator.wakeLock.request('screen').then((l) => { lock.current = l; }).catch(() => {});
-    return () => { lock.current?.release(); };
-  }, []);
+    if (enabled) {
+      navigator.wakeLock.request('screen').then((l) => { lock.current = l; }).catch(() => {});
+    } else {
+      lock.current?.release();
+      lock.current = null;
+    }
+    return () => { lock.current?.release(); lock.current = null; };
+  }, [enabled]);
 }
 
 export default function RecipeDetailPage() {
@@ -48,8 +53,10 @@ export default function RecipeDetailPage() {
   const [scale, setScale] = useState(1);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
+  const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
+  const wakeLockSupported = 'wakeLock' in navigator;
 
-  useWakeLock();
+  useWakeLock(wakeLockEnabled);
 
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ['recipe', id],
@@ -148,9 +155,23 @@ export default function RecipeDetailPage() {
             <ExternalLink size={11} /> {recipe.source_host}
           </a>
         )}
-        <div className="ml-auto flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-warm-gray)' }}>
-          <Moon size={11} /> Screen stays on
-        </div>
+        {wakeLockSupported && (
+          <button
+            onClick={() => setWakeLockEnabled((v) => !v)}
+            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full transition-colors"
+            style={{
+              background: wakeLockEnabled ? 'var(--color-sage)' : 'var(--color-cream-dark)',
+              color: wakeLockEnabled ? 'white' : 'var(--color-warm-gray)',
+              border: '1px solid',
+              borderColor: wakeLockEnabled ? 'var(--color-sage)' : 'var(--color-border)',
+              cursor: 'pointer',
+            }}
+            title={wakeLockEnabled ? 'Screen will stay on — tap to turn off' : 'Tap to keep screen on while cooking'}
+          >
+            <Moon size={11} />
+            {wakeLockEnabled ? 'Screen on' : 'Keep screen on'}
+          </button>
+        )}
       </div>
 
       {/* Serving scaler */}
