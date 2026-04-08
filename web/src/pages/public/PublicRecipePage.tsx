@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, Users, ArrowLeft, ExternalLink } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useWakeLock, wakeLockSupported } from '../../hooks/useWakeLock';
+import { WakeLockToggle } from '../../components/WakeLockToggle';
 
 interface PublicRecipe {
   id: number; title: string; description: string | null;
@@ -23,6 +25,9 @@ function formatQty(qty: number | null, scale: number) {
 export default function PublicRecipePage() {
   const { username, slug } = useParams<{ username: string; slug: string }>();
   const [scale, setScale] = useState(1);
+  const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
+  const wakeLockSupported = 'wakeLock' in navigator;
+  useWakeLock(wakeLockEnabled);
 
   const { data: recipe, isLoading } = useQuery({
     queryKey: ['public_recipe', username, slug],
@@ -72,6 +77,9 @@ export default function PublicRecipePage() {
             className="flex items-center gap-1 text-xs no-underline hover:underline" style={{ color: 'var(--color-warm-gray)' }}>
             <ExternalLink size={11} /> {recipe.source_host}
           </a>
+        )}
+        {wakeLockSupported && (
+          <WakeLockToggle enabled={wakeLockEnabled} onToggle={() => setWakeLockEnabled((v) => !v)} />
         )}
       </div>
 
