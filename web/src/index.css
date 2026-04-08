@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Lora", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+
+  --color-cream:      #FBF7F0;
+  --color-cream-dark: #F2EBE0;
+  --color-terra:      #C1654A;
+  --color-terra-dark: #A3503A;
+  --color-sage:       #5A7052;
+  --color-sage-light: #8FA885;
+  --color-charcoal:   #2A2520;
+  --color-warm-gray:  #7A7370;
+  --color-warm-gray-light: #C4BFBB;
+  --color-border:     #E2D9CF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: var(--color-cream);
+  color: var(--color-charcoal);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* Cooking mode step transition */
+@keyframes step-complete {
+  0%   { background-color: transparent; }
+  30%  { background-color: #e8f0e5; }
+  100% { background-color: transparent; }
+}
+
+.step-flash {
+  animation: step-complete 0.6s ease;
+}
