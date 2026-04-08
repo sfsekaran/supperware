@@ -5,9 +5,7 @@ module Api
       before_action :set_recipe, only: [:show, :update, :destroy]
 
       def index
-        recipes = current_user.recipes.active
-                               .order(created_at: :desc)
-                               .page(params[:page])
+        recipes = current_user.recipes.active.order(created_at: :desc)
         render json: serialize(recipes)
       end
 
