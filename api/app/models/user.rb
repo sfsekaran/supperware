@@ -1,9 +1,7 @@
 class User < ApplicationRecord
-  include Devise::JWT::RevocationStrategies::Denylist
-
   devise :database_authenticatable, :registerable,
          :recoverable, :validatable,
-         :jwt_authenticatable, jwt_revocation_strategy: self
+         :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
 
   has_many :recipes, dependent: :destroy
   has_many :collections, dependent: :destroy

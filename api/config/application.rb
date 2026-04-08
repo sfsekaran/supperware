@@ -40,5 +40,9 @@ module Api
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Devise requires session middleware to be present even in API-only mode
+    # (it won't actually be used — JWT handles auth — but Devise checks for it)
+    config.middleware.use ActionDispatch::Session::CookieStore, key: "_supperware_session"
   end
 end
