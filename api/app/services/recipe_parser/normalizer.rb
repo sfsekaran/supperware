@@ -101,17 +101,32 @@ module RecipeParser
       current_section = nil
 
       Array(instructions).each do |item|
+        # Plain string step (array of strings format)
+        if item.is_a?(String)
+          t = item.strip.presence
+          steps << { text: t, section: current_section } if t
+          next
+        end
+
         next unless item.is_a?(Hash)
 
         case item["@type"]
         when "HowToSection"
           current_section = text(item["name"])
           Array(item["itemListElement"]).each do |step|
-            next unless step.is_a?(Hash)
-            steps << { text: extract_step_text(step), section: current_section }
+            if step.is_a?(String)
+              t = step.strip.presence
+              steps << { text: t, section: current_section } if t
+            elsif step.is_a?(Hash)
+              steps << { text: extract_step_text(step), section: current_section }
+            end
           end
         when "HowToStep"
           steps << { text: extract_step_text(item), section: current_section }
+        else
+          # Unknown object — try to get any text out of it
+          t = extract_step_text(item).presence
+          steps << { text: t, section: current_section } if t
         end
       end
 
