@@ -1,8 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Clock, Users, ArrowLeft, ExternalLink, Moon } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Clock, Users, ArrowLeft, ExternalLink, Trash2, Globe, Lock } from 'lucide-react';
 import { api } from '../lib/api';
+import { useWakeLock, wakeLockSupported } from '../hooks/useWakeLock';
+import { WakeLockToggle } from '../components/WakeLockToggle';
+import { useAuthStore } from '../stores/authStore';
+import type { AuthState } from '../stores/authStore';
 
 interface Ingredient {
   id: number; position: number; group_name: string | null;
@@ -17,11 +21,12 @@ interface Step {
 }
 interface Recipe {
   id: number; title: string; description: string | null;
-  source_url: string | null; source_host: string | null;
+  slug: string; source_url: string | null; source_host: string | null;
   primary_image_url: string | null;
   prep_time_minutes: number | null; cook_time_minutes: number | null; total_time_minutes: number | null;
   yield_quantity: number | null; yield_unit: string | null; yield_raw: string | null;
   cuisine: string | null; diet_tags: string[]; is_favorite: boolean;
+  visibility: 'private' | 'unlisted' | 'public';
   personal_notes: string | null; nutrition: Record<string, string> | null;
   ingredients: Ingredient[]; steps: Step[];
 }
@@ -33,28 +38,17 @@ function formatQuantity(qty: number | null, scale: number): string {
   return val.toFixed(1).replace(/\.0$/, '');
 }
 
-function useWakeLock(enabled: boolean) {
-  const lock = useRef<WakeLockSentinel | null>(null);
-  useEffect(() => {
-    if (!('wakeLock' in navigator)) return;
-    if (enabled) {
-      navigator.wakeLock.request('screen').then((l) => { lock.current = l; }).catch(() => {});
-    } else {
-      lock.current?.release();
-      lock.current = null;
-    }
-    return () => { lock.current?.release(); lock.current = null; };
-  }, [enabled]);
-}
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const username = useAuthStore((s: AuthState) => s.user?.username);
   const [scale, setScale] = useState(1);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
-  const wakeLockSupported = 'wakeLock' in navigator;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const queryClient = useQueryClient();
 
   useWakeLock(wakeLockEnabled);
 
@@ -63,6 +57,23 @@ export default function RecipeDetailPage() {
     queryFn: async () => {
       const { data } = await api.get<Recipe>(`/api/v1/recipes/${id}`);
       return data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/api/v1/recipes/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      navigate('/dashboard');
+    },
+  });
+
+  const visibilityMutation = useMutation({
+    mutationFn: (visibility: string) =>
+      api.patch(`/api/v1/recipes/${id}`, { recipe: { visibility } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', id] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 
@@ -111,12 +122,65 @@ export default function RecipeDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 pb-24">
-      {/* Back */}
-      <button onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-sm mb-6 hover:opacity-70 transition-opacity"
-        style={{ color: 'var(--color-warm-gray)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-        <ArrowLeft size={15} /> Back to recipes
-      </button>
+      {/* Back + actions */}
+      <div className="flex items-center justify-between mb-6">
+        <button onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 text-sm hover:opacity-70 transition-opacity"
+          style={{ color: 'var(--color-warm-gray)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <ArrowLeft size={15} /> Back to recipes
+        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Publish / unpublish */}
+          {recipe && (
+            <button
+              onClick={() => visibilityMutation.mutate(recipe.visibility === 'public' ? 'private' : 'public')}
+              disabled={visibilityMutation.isPending}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
+              style={{
+                background: recipe.visibility === 'public' ? '#e8f0e5' : 'var(--color-cream-dark)',
+                color: recipe.visibility === 'public' ? 'var(--color-sage)' : 'var(--color-warm-gray)',
+                border: '1px solid',
+                borderColor: recipe.visibility === 'public' ? 'var(--color-sage-light)' : 'var(--color-border)',
+                cursor: 'pointer',
+              }}
+            >
+              {recipe.visibility === 'public' ? <Globe size={12} /> : <Lock size={12} />}
+              {recipe.visibility === 'public' ? 'Public' : 'Private'}
+            </button>
+          )}
+
+          {/* Delete */}
+          {confirmDelete ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>Delete?</span>
+              <button
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+                className="text-xs px-3 py-1.5 rounded-full font-medium"
+                style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', cursor: 'pointer' }}
+              >
+                Yes, delete
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-xs px-3 py-1.5 rounded-full"
+                style={{ background: 'var(--color-cream-dark)', color: 'var(--color-warm-gray)', border: '1px solid var(--color-border)', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors hover:opacity-80"
+              style={{ background: 'var(--color-cream-dark)', color: 'var(--color-warm-gray)', border: '1px solid var(--color-border)', cursor: 'pointer' }}
+            >
+              <Trash2 size={12} /> Delete
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Hero image */}
       {recipe.primary_image_url && (
@@ -155,22 +219,18 @@ export default function RecipeDetailPage() {
             <ExternalLink size={11} /> {recipe.source_host}
           </a>
         )}
-        {wakeLockSupported && (
-          <button
-            onClick={() => setWakeLockEnabled((v) => !v)}
-            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full transition-colors"
-            style={{
-              background: wakeLockEnabled ? 'var(--color-sage)' : 'var(--color-cream-dark)',
-              color: wakeLockEnabled ? 'white' : 'var(--color-warm-gray)',
-              border: '1px solid',
-              borderColor: wakeLockEnabled ? 'var(--color-sage)' : 'var(--color-border)',
-              cursor: 'pointer',
-            }}
-            title={wakeLockEnabled ? 'Screen will stay on — tap to turn off' : 'Tap to keep screen on while cooking'}
+        {recipe.visibility === 'public' && username && (
+          <a
+            href={`/u/${username}/${recipe.slug}`}
+            target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs no-underline hover:underline"
+            style={{ color: 'var(--color-warm-gray)' }}
           >
-            <Moon size={11} />
-            {wakeLockEnabled ? 'Screen on' : 'Keep screen on'}
-          </button>
+            <Globe size={11} /> Public page
+          </a>
+        )}
+        {wakeLockSupported && (
+          <WakeLockToggle enabled={wakeLockEnabled} onToggle={() => setWakeLockEnabled((v) => !v)} />
         )}
       </div>
 
