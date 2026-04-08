@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { PlusCircle, Clock, Search, Heart } from 'lucide-react';
+import { PlusCircle, Clock, Search, Heart, Lock, ExternalLink } from 'lucide-react';
 import { api } from '../lib/api';
+import { useAuthStore } from '../stores/authStore';
+import type { AuthState } from '../stores/authStore';
 
 interface Recipe {
   id: number;
@@ -15,11 +17,12 @@ interface Recipe {
   total_time_minutes: number | null;
   primary_image_url: string | null;
   is_favorite: boolean;
+  visibility: 'private' | 'unlisted' | 'public';
   source_host: string | null;
   parse_confidence: number | null;
 }
 
-function RecipeCard({ recipe }: { recipe: Recipe }) {
+function RecipeCard({ recipe, username }: { recipe: Recipe; username?: string }) {
   const navigate = useNavigate();
   return (
     <button
@@ -50,9 +53,25 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
             </span>
           )}
           {recipe.is_favorite && <Heart size={13} fill="currentColor" style={{ color: 'var(--color-terra)' }} />}
+          {recipe.visibility !== 'public' && (
+            <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ml-auto" style={{ background: 'var(--color-cream-dark)', color: 'var(--color-warm-gray)' }}>
+              <Lock size={9} /> Private
+            </span>
+          )}
         </div>
         {recipe.source_host && (
           <p className="text-xs mt-2 truncate" style={{ color: 'var(--color-warm-gray-light)' }}>{recipe.source_host}</p>
+        )}
+        {recipe.visibility === 'public' && username && (
+          <a
+            href={`/u/${username}/${recipe.slug}`}
+            target="_blank" rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1 text-xs mt-2 no-underline hover:underline"
+            style={{ color: 'var(--color-sage)' }}
+          >
+            <ExternalLink size={10} /> Public page
+          </a>
         )}
       </div>
     </button>
@@ -61,6 +80,7 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
 
 export default function DashboardPage() {
   const [search, setSearch] = useState('');
+  const username = useAuthStore((s: AuthState) => s.user?.username);
 
   const { data: recipes, isLoading, error } = useQuery({
     queryKey: ['recipes'],
@@ -84,8 +104,15 @@ export default function DashboardPage() {
             My Recipes
           </h1>
           {recipes && (
-            <p className="text-sm mt-1" style={{ color: 'var(--color-warm-gray)' }}>
+            <p className="text-sm mt-1 flex items-center gap-3" style={{ color: 'var(--color-warm-gray)' }}>
               {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}
+              {username && (
+                <a href={`/u/${username}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs no-underline hover:underline"
+                  style={{ color: 'var(--color-sage)' }}>
+                  <ExternalLink size={11} /> My public profile
+                </a>
+              )}
             </p>
           )}
         </div>
@@ -145,7 +172,7 @@ export default function DashboardPage() {
 
       {!isLoading && filtered && filtered.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((r) => <RecipeCard key={r.id} recipe={r} />)}
+          {filtered.map((r) => <RecipeCard key={r.id} recipe={r} username={username} />)}
         </div>
       )}
     </div>
