@@ -295,14 +295,22 @@ export default function RecipeDetailPage() {
                           {checked && <span style={{ color: 'white', fontSize: '0.6rem', fontWeight: 700 }}>✓</span>}
                         </div>
                         <span className="text-sm leading-relaxed" style={{ color: 'var(--color-charcoal)', textDecoration: checked ? 'line-through' : 'none' }}>
-                          {ing.quantity !== null && (
-                            <strong>{formatQuantity(ing.quantity, scale)}{ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} </strong>
-                          )}
-                          {ing.unit && <span>{ing.unit} </span>}
-                          {ing.weight_grams && (
-                            <span style={{ color: 'var(--color-warm-gray)', fontSize: '0.9em' }}>
-                              ({Math.round(ing.weight_grams * scale)}g){' '}
-                            </span>
+                          {ing.weight_grams ? (
+                            <>
+                              <strong>{Math.round(ing.weight_grams * scale)}g </strong>
+                              {(ing.quantity !== null || ing.unit) && (
+                                <span style={{ color: 'var(--color-warm-gray)', fontSize: '0.9em' }}>
+                                  ({ing.quantity !== null ? `${formatQuantity(ing.quantity, scale)}${ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} ` : ''}{ing.unit ?? ''}){' '}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {ing.quantity !== null && (
+                                <strong>{formatQuantity(ing.quantity, scale)}{ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} </strong>
+                              )}
+                              {ing.unit && <span>{ing.unit} </span>}
+                            </>
                           )}
                           {ing.ingredient_name ?? ing.raw_text}
                           {ing.preparation_notes && <em style={{ color: 'var(--color-warm-gray)' }}>, {ing.preparation_notes}</em>}
