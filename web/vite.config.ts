@@ -9,7 +9,11 @@ export default defineConfig({
     port: 3001,
     allowedHosts: ['supperware.sathyasekaran.com'],
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api/v1/auth':       'http://localhost:3000',
+      '/api/v1/recipes':    'http://localhost:3000',
+      '/api/v1/parse_jobs': 'http://localhost:3000',
+      '/api/v1/public':     'http://localhost:3000',
+      '/api/v1/settings':   'http://localhost:3000',
     },
   },
 })
