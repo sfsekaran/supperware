@@ -45,7 +45,7 @@ gem "jsonapi-serializer"
 gem "kamal", require: false
 
 # Environment variables from .env
-gem "dotenv-rails", require: "dotenv/rails-now"
+gem "dotenv-rails", require: "dotenv/load"
 
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
