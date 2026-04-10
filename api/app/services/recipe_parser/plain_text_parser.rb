@@ -31,7 +31,7 @@ module RecipeParser
       ---
 
       OUTPUT EXAMPLE:
-      {"title":"Garlic Pasta","description":"A quick weeknight pasta with plenty of garlic.","cuisine":null,"prep_time_minutes":5,"cook_time_minutes":15,"total_time_minutes":20,"yield_quantity":2,"yield_unit":"servings","ingredients":["200g spaghetti","4 cloves garlic, sliced","3 tbsp olive oil","salt and pepper"],"steps":["Cook spaghetti in salted boiling water until al dente.","Meanwhile, fry the garlic in olive oil over low heat until golden.","Drain pasta, toss with garlic oil, season and serve."]}
+      {"title":"Garlic Pasta","description":"A quick weeknight pasta with plenty of garlic.","cuisine":null,"prep_time_minutes":5,"cook_time_minutes":15,"total_time_minutes":20,"yield_quantity":2,"yield_unit":"servings","yield_description":null,"ingredients":["200g spaghetti","4 cloves garlic, sliced","3 tbsp olive oil","salt and pepper"],"steps":["Cook spaghetti in salted boiling water until al dente.","Meanwhile, fry the garlic in olive oil over low heat until golden.","Drain pasta, toss with garlic oil, season and serve."]}
 
       Now extract from the user's text, following these rules:
       - Each numbered instruction must be its own separate entry in the steps array
@@ -54,7 +54,7 @@ module RecipeParser
 
     def self.call_ollama(text)
       conn = Faraday.new(url: OLLAMA_URL) do |f|
-        f.options.timeout = 60
+        f.options.timeout = 180
         f.request :json
         f.response :json
       end
@@ -131,6 +131,7 @@ module RecipeParser
           total_time_minutes: json["total_time_minutes"]&.to_i,
           yield_quantity:     json["yield_quantity"]&.to_f,
           yield_unit:         json["yield_unit"].presence,
+          yield_description:  json["yield_description"].presence,
           parsed_format:      "text_paste",
           parse_confidence:   nil,
         },

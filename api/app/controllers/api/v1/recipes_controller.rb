@@ -72,6 +72,7 @@ module Api
           yield_quantity:     r.yield_quantity,
           yield_unit:         r.yield_unit,
           yield_raw:          r.yield_raw,
+          yield_description:  r.yield_description,
           primary_image_url:  r.primary_image_url,
           source_url:         r.source_url,
           source_host:        r.source_host,

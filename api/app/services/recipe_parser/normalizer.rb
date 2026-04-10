@@ -25,6 +25,7 @@ module RecipeParser
         yield_raw:          text(raw["recipeYield"]),
         yield_quantity:     extract_yield_quantity(raw["recipeYield"]),
         yield_unit:         extract_yield_unit(raw["recipeYield"]),
+        yield_description:  extract_yield_description(raw["recipeYield"]),
         cuisine:            text_or_first(raw["recipeCuisine"]),
         category:           text_or_first(raw["recipeCategory"]),
         keywords:           extract_keywords(raw["keywords"]),
@@ -57,6 +58,13 @@ module RecipeParser
       return image["url"] if image.is_a?(Hash)
       return image.first["url"] if image.is_a?(Array) && image.first.is_a?(Hash)
       image.first.to_s if image.is_a?(Array)
+    end
+
+    def self.extract_yield_description(raw)
+      return nil if raw.blank?
+      # recipeYield may be an array — find the element that contains letters
+      # (the descriptive one, e.g. "one 13x18 inch pizza") vs a plain number ("16")
+      Array(raw).map(&:to_s).find { |v| v.match?(/[a-z]/i) }&.strip&.presence
     end
 
     def self.extract_yield_quantity(raw)
