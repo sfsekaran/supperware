@@ -48,7 +48,7 @@ export default function AppLayout() {
     <div className="flex min-h-dvh">
       {/* Sidebar — hidden on mobile */}
       <aside
-        className="hidden md:flex w-56 flex-col py-6 px-4 shrink-0"
+        className="app-sidebar w-56 flex-col py-6 px-4 shrink-0"
         style={{ background: 'var(--color-sage)', color: 'white' }}
       >
         <Link to="/dashboard" className="flex items-center gap-2 mb-8 no-underline">
@@ -89,7 +89,7 @@ export default function AppLayout() {
 
       {/* Bottom tab bar — mobile only */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center px-2 z-50"
+        className="app-bottom-nav fixed bottom-0 left-0 right-0 items-center px-2 z-50"
         style={{
           background: 'var(--color-sage)',
           borderTop: '1px solid rgba(255,255,255,0.15)',
