@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_035827) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_044218) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -122,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_035827) do
     t.bigint "user_id", null: false
     t.integer "user_rating"
     t.string "visibility", default: "private", null: false
+    t.string "yield_description"
     t.decimal "yield_quantity", precision: 8, scale: 2
     t.string "yield_raw"
     t.string "yield_unit"
