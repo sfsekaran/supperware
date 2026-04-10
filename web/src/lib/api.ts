@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000';
+const API_BASE = '';
 
 // Token getter injected by auth store to avoid circular deps
 let getToken: () => string | null = () => null;
