@@ -24,7 +24,7 @@ interface Recipe {
   slug: string; source_url: string | null; source_host: string | null;
   primary_image_url: string | null;
   prep_time_minutes: number | null; cook_time_minutes: number | null; total_time_minutes: number | null;
-  yield_quantity: number | null; yield_unit: string | null; yield_raw: string | null;
+  yield_quantity: number | null; yield_unit: string | null; yield_raw: string | null; yield_description: string | null;
   cuisine: string | null; diet_tags: string[]; is_favorite: boolean;
   visibility: 'private' | 'unlisted' | 'public';
   personal_notes: string | null; nutrition: Record<string, string> | null;
@@ -236,26 +236,33 @@ export default function RecipeDetailPage() {
 
       {/* Serving scaler */}
       {recipe.yield_quantity && (
-        <div className="flex items-center gap-4 p-4 rounded-xl mb-8" style={{ background: 'var(--color-cream-dark)', border: '1px solid var(--color-border)' }}>
-          <Users size={16} style={{ color: 'var(--color-warm-gray)', flexShrink: 0 }} />
-          <span className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
-            Serves {Math.round(yieldScaled)} {recipe.yield_unit ?? ''}
-          </span>
-          <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => setScale((s) => Math.max(0.25, +(s - 0.25).toFixed(2)))}
-              className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg"
-              style={{ background: 'var(--color-terra)', color: 'white', border: 'none', cursor: 'pointer', lineHeight: 1 }}>
-              −
-            </button>
-            <span className="text-sm font-medium w-12 text-center" style={{ color: 'var(--color-charcoal)' }}>
-              {scale === 1 ? '1×' : `${scale}×`}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'var(--color-cream-dark)', border: '1px solid var(--color-border)' }}>
+            <Users size={16} style={{ color: 'var(--color-warm-gray)', flexShrink: 0 }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
+              Serves {Math.round(yieldScaled)} {recipe.yield_unit ?? ''}
             </span>
-            <button onClick={() => setScale((s) => +(s + 0.25).toFixed(2))}
-              className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg"
-              style={{ background: 'var(--color-terra)', color: 'white', border: 'none', cursor: 'pointer', lineHeight: 1 }}>
-              +
-            </button>
+            <div className="flex items-center gap-2 ml-auto">
+              <button onClick={() => setScale((s) => Math.max(0.25, +(s - 0.25).toFixed(2)))}
+                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg"
+                style={{ background: 'var(--color-terra)', color: 'white', border: 'none', cursor: 'pointer', lineHeight: 1 }}>
+                −
+              </button>
+              <span className="text-sm font-medium w-12 text-center" style={{ color: 'var(--color-charcoal)' }}>
+                {scale === 1 ? '1×' : `${scale}×`}
+              </span>
+              <button onClick={() => setScale((s) => +(s + 0.25).toFixed(2))}
+                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg"
+                style={{ background: 'var(--color-terra)', color: 'white', border: 'none', cursor: 'pointer', lineHeight: 1 }}>
+                +
+              </button>
+            </div>
           </div>
+          {recipe.yield_description && (
+            <p className="text-xs mt-2 pl-1" style={{ color: 'var(--color-warm-gray)' }}>
+              Makes {recipe.yield_description}
+            </p>
+          )}
         </div>
       )}
 
