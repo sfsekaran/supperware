@@ -11,7 +11,7 @@ import type { AuthState } from '../stores/authStore';
 interface Ingredient {
   id: number; position: number; group_name: string | null;
   raw_text: string; quantity: number | null; quantity_max: number | null;
-  unit: string | null; ingredient_name: string | null;
+  unit: string | null; weight_grams: number | null; ingredient_name: string | null;
   preparation_notes: string | null; is_optional: boolean;
   parse_confidence: number | null;
 }
@@ -292,6 +292,11 @@ export default function RecipeDetailPage() {
                             <strong>{formatQuantity(ing.quantity, scale)}{ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} </strong>
                           )}
                           {ing.unit && <span>{ing.unit} </span>}
+                          {ing.weight_grams && (
+                            <span style={{ color: 'var(--color-warm-gray)', fontSize: '0.9em' }}>
+                              ({Math.round(ing.weight_grams * scale)}g){' '}
+                            </span>
+                          )}
                           {ing.ingredient_name ?? ing.raw_text}
                           {ing.preparation_notes && <em style={{ color: 'var(--color-warm-gray)' }}>, {ing.preparation_notes}</em>}
                           {ing.is_optional && <span style={{ color: 'var(--color-warm-gray)' }}> (optional)</span>}

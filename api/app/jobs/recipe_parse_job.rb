@@ -24,6 +24,7 @@ class RecipeParseJob < ApplicationJob
           quantity_max:      parsed.quantity_max,
           unit:              parsed.unit,
           unit_normalized:   parsed.unit_normalized,
+          weight_grams:      parsed.weight_grams,
           ingredient_name:   parsed.ingredient_name,
           preparation_notes: parsed.preparation_notes,
           is_optional:       parsed.is_optional,

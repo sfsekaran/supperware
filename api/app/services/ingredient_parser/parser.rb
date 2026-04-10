@@ -4,13 +4,16 @@ require_relative "unit_registry"
 module IngredientParser
   ParsedIngredient = Struct.new(
     :raw_text, :quantity, :quantity_max, :unit, :unit_normalized,
-    :ingredient_name, :preparation_notes, :is_optional, :parse_confidence,
+    :weight_grams, :ingredient_name, :preparation_notes, :is_optional, :parse_confidence,
     keyword_init: true
   )
 
   module Parser
     # Optional indicator words
     OPTIONAL_PATTERN = /\b(optional|to taste|as needed|as desired|if desired)\b/i
+
+    # Gram weight embedded in parentheses: "(840g)", "(1.5 grams)", "(about 200g)"
+    GRAM_PATTERN = /\(\s*(?:about\s+)?(\d+(?:\.\d+)?)\s*g(?:rams?)?\s*\)/i
 
     # Quantity range pattern: "1-2" or "1 to 2"
     RANGE_PATTERN = /\A([\d.]+)\s*(?:-|to)\s*([\d.]+)\s*/
@@ -23,8 +26,11 @@ module IngredientParser
 
       text = FractionNormalizer.normalize(raw_text.strip)
 
+      weight_grams = GRAM_PATTERN.match(text)&.then { |m| m[1].to_f }
+
       is_optional = OPTIONAL_PATTERN.match?(text)
-      text_clean  = text.gsub(OPTIONAL_PATTERN, "").strip
+      # Strip gram annotation before further parsing so it doesn't end up in ingredient_name
+      text_clean  = text.gsub(GRAM_PATTERN, "").gsub(OPTIONAL_PATTERN, "").strip
 
       quantity, quantity_max, text_after_quantity = extract_quantity(text_clean)
       unit, unit_normalized, text_after_unit     = extract_unit(text_after_quantity)
@@ -38,6 +44,7 @@ module IngredientParser
         quantity_max:      quantity_max,
         unit:              unit,
         unit_normalized:   unit_normalized,
+        weight_grams:      weight_grams,
         ingredient_name:   name.presence,
         preparation_notes: notes.presence,
         is_optional:       is_optional,

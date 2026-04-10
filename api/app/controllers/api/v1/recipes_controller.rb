@@ -104,6 +104,7 @@ module Api
           quantity_max:      i.quantity_max,
           unit:              i.unit,
           unit_normalized:   i.unit_normalized,
+          weight_grams:      i.weight_grams,
           ingredient_name:   i.ingredient_name,
           preparation_notes: i.preparation_notes,
           is_optional:       i.is_optional,
