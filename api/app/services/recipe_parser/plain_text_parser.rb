@@ -60,9 +60,10 @@ module RecipeParser
       end
 
       res = conn.post("/api/chat", {
-        model:  OLLAMA_MODEL,
-        stream: false,
-        format: "json",
+        model:      OLLAMA_MODEL,
+        stream:     false,
+        format:     "json",
+        keep_alive: ENV.fetch("OLLAMA_KEEP_ALIVE", "30m"),
         messages: [
           { role: "system", content: PROMPT },
           { role: "user",   content: "Extract the recipe from this text:\n\n#{text}" },
