@@ -1,0 +1,5 @@
+class AddTextToParseJobs < ActiveRecord::Migration[8.1]
+  def change
+    add_column :parse_jobs, :raw_text, :text
+  end
+end

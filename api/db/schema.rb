@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_052000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_09_052143) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -67,6 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_052000) do
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.text "error_message"
+    t.text "raw_text"
     t.bigint "result_recipe_id"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
