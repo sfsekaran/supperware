@@ -1,6 +1,7 @@
 require_relative "fetcher"
 require_relative "json_ld_extractor"
 require_relative "normalizer"
+require_relative "plain_text_parser"
 
 module RecipeParser
   ParseResult = Struct.new(
@@ -55,10 +56,22 @@ module RecipeParser
     end
 
     def self.call_text(text)
-      # Delegate to plain text parser (Phase 2)
+      result = PlainTextParser.parse(text)
+
+      if result[:error]
+        return ParseResult.new(error: result[:error])
+      end
+
+      attrs = result[:recipe_attrs]
+      confidence = compute_confidence(result, format: :text_paste)
+
       ParseResult.new(
-        error:    "Plain text parsing not yet implemented.",
-        warnings: ["text_parse_unavailable"]
+        recipe_attrs:     attrs.merge(parse_confidence: confidence),
+        raw_ingredients:  result[:ingredients],
+        steps:            result[:steps],
+        parse_confidence: confidence,
+        parsed_format:    "text_paste",
+        warnings:         result[:warnings]
       )
     end
 
@@ -66,11 +79,10 @@ module RecipeParser
       attrs = normalized[:recipe_attrs]
       score = 0.0
       score += 0.25 if attrs[:title].present?
-      score += 0.25 if normalized[:ingredients].any?
-      score += 0.25 if normalized[:steps].any?
+      score += 0.25 if Array(normalized[:ingredients]).any?
+      score += 0.25 if Array(normalized[:steps]).any?
       score += 0.15 if attrs[:total_time_minutes] || attrs[:cook_time_minutes]
       score += 0.10 if attrs[:primary_image_url].present?
-      # JSON-LD is the most reliable format — no penalty
       score.round(3)
     end
   end

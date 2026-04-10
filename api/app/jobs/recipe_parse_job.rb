@@ -5,7 +5,7 @@ class RecipeParseJob < ApplicationJob
     job = ParseJob.find(parse_job_id)
     job.update!(status: "processing")
 
-    result = RecipeParser::Orchestrator.call(url: job.url)
+    result = RecipeParser::Orchestrator.call(url: job.url, text: job.raw_text)
 
     if result.error
       job.fail!(result.error)

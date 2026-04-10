@@ -11,7 +11,7 @@ module Api
           return render json: { error: "Provide a url or text param" }, status: :bad_request
         end
 
-        job = current_user.parse_jobs.create!(url: url, status: "pending")
+        job = current_user.parse_jobs.create!(url: url, raw_text: text, status: "pending")
         RecipeParseJob.perform_later(job.id)
 
         render json: { job_id: job.id, status: job.status }, status: :accepted
