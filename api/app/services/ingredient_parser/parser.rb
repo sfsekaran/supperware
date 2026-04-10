@@ -15,6 +15,9 @@ module IngredientParser
     # Gram weight embedded in parentheses: "(840g)", "(1.5 grams)", "(about 200g)"
     GRAM_PATTERN = /\(\s*(?:about\s+)?(\d+(?:\.\d+)?)\s*g(?:rams?)?\s*\)/i
 
+    # Hedge words that precede a quantity: "about 2 quarts" → strip "about"
+    APPROX_PREFIX = /\A(?:about|approximately|around|roughly|nearly|just over|just under)\s+/i
+
     # Quantity range pattern: "1-2" or "1 to 2"
     RANGE_PATTERN = /\A([\d.]+)\s*(?:-|to)\s*([\d.]+)\s*/
 
@@ -32,6 +35,7 @@ module IngredientParser
       # Strip gram annotation before further parsing so it doesn't end up in ingredient_name
       text_clean  = text.gsub(GRAM_PATTERN, "").gsub(OPTIONAL_PATTERN, "").strip
 
+      text_clean = text_clean.sub(APPROX_PREFIX, "")
       quantity, quantity_max, text_after_quantity = extract_quantity(text_clean)
       unit, unit_normalized, text_after_unit     = extract_unit(text_after_quantity)
       name, notes                                 = extract_name_and_notes(text_after_unit)
