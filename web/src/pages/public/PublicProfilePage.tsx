@@ -78,13 +78,14 @@ export default function PublicProfilePage() {
             {recipes.map((r) => (
               <Link key={r.id} to={`/u/${username}/${r.slug}`} className="no-underline rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
                 style={{ background: 'white', border: '1px solid var(--color-border)', display: 'block' }}>
-                {r.primary_image_url ? (
-                  <img src={r.primary_image_url} alt={r.title} className="w-full object-cover" style={{ height: 140 }} />
-                ) : (
-                  <div className="w-full flex items-center justify-center" style={{ height: 140, background: 'var(--color-cream-dark)' }}>
-                    <span style={{ fontSize: '2rem' }}>🍽</span>
-                  </div>
-                )}
+                <div className="w-full relative flex items-center justify-center" style={{ height: 140, background: 'var(--color-cream-dark)' }}>
+                  <span style={{ fontSize: '2rem' }}>🍽</span>
+                  {r.primary_image_url && (
+                    <img src={r.primary_image_url} alt={r.title}
+                      className="w-full object-cover absolute inset-0" style={{ height: 140 }}
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  )}
+                </div>
                 <div className="p-3">
                   <h3 className="font-medium line-clamp-2 mb-1" style={{ fontFamily: 'var(--font-display)', fontSize: '0.9rem', color: 'var(--color-charcoal)', lineHeight: 1.4 }}>
                     {r.title}

@@ -47,7 +47,8 @@ export default function PublicRecipePage() {
       </Link>
 
       {recipe.primary_image_url && (
-        <img src={recipe.primary_image_url} alt={recipe.title} className="w-full object-cover rounded-2xl mb-6" style={{ maxHeight: 320 }} />
+        <img src={recipe.primary_image_url} alt={recipe.title} className="w-full object-cover rounded-2xl mb-6" style={{ maxHeight: 320 }}
+          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
       )}
 
       <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 600, lineHeight: 1.2, color: 'var(--color-charcoal)', marginBottom: '0.75rem' }}>

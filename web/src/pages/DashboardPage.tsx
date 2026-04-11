@@ -30,13 +30,14 @@ function RecipeCard({ recipe, username }: { recipe: Recipe; username?: string })
       className="text-left rounded-2xl overflow-hidden transition-shadow hover:shadow-md"
       style={{ background: 'white', border: '1px solid var(--color-border)', cursor: 'pointer', padding: 0 }}
     >
-      {recipe.primary_image_url ? (
-        <img src={recipe.primary_image_url} alt={recipe.title} className="w-full object-cover" style={{ height: 160 }} />
-      ) : (
-        <div className="w-full flex items-center justify-center" style={{ height: 160, background: 'var(--color-cream-dark)' }}>
-          <span style={{ fontSize: '2.5rem' }}>🍽</span>
-        </div>
-      )}
+      <div className="w-full relative flex items-center justify-center" style={{ height: 160, background: 'var(--color-cream-dark)' }}>
+        <span style={{ fontSize: '2.5rem' }}>🍽</span>
+        {recipe.primary_image_url && (
+          <img src={recipe.primary_image_url} alt={recipe.title}
+            className="w-full object-cover absolute inset-0" style={{ height: 160 }}
+            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+        )}
+      </div>
       <div className="p-4">
         <h3 className="font-medium mb-1 line-clamp-2" style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--color-charcoal)', lineHeight: 1.4 }}>
           {recipe.title}
