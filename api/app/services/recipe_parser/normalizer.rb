@@ -1,3 +1,5 @@
+require "cgi"
+
 module RecipeParser
   # Maps a raw schema.org Recipe hash to our internal attribute shape.
   module Normalizer
@@ -142,7 +144,7 @@ module RecipeParser
     end
 
     def self.extract_step_text(step)
-      (step["text"] || step["name"] || "").strip
+      CGI.unescapeHTML((step["text"] || step["name"] || "").strip)
     end
 
     def self.extract_nutrition(raw)
@@ -153,12 +155,14 @@ module RecipeParser
 
     def self.text(val)
       return nil if val.nil?
-      val.is_a?(Hash) ? val["@value"] || val["name"] : val.to_s.presence
+      raw = val.is_a?(Hash) ? val["@value"] || val["name"] : val.to_s.presence
+      raw ? CGI.unescapeHTML(raw) : nil
     end
 
     def self.text_or_first(val)
       return nil if val.nil?
-      val.is_a?(Array) ? val.first.to_s.presence : val.to_s.presence
+      raw = val.is_a?(Array) ? val.first.to_s.presence : val.to_s.presence
+      raw ? CGI.unescapeHTML(raw) : nil
     end
   end
 end
