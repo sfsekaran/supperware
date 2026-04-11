@@ -8,10 +8,22 @@ module Api
         render json: @recipe.ingredients.map { |i| ingredient_json(i) }
       end
 
+      def create
+        attrs = build_ingredient_attrs(params.require(:ingredient).permit(:raw_text, :position, :group_name))
+        ingredient = @recipe.ingredients.create!(attrs)
+        render json: ingredient_json(ingredient), status: :created
+      end
+
       def update
         ingredient = @recipe.ingredients.find(params[:id])
-        ingredient.update!(ingredient_params)
+        attrs = build_ingredient_attrs(params.require(:ingredient).permit(:raw_text, :position, :group_name))
+        ingredient.update!(attrs)
         render json: ingredient_json(ingredient)
+      end
+
+      def destroy
+        @recipe.ingredients.find(params[:id]).destroy!
+        head :no_content
       end
 
       private
@@ -20,11 +32,24 @@ module Api
         @recipe = current_user.recipes.active.find(params[:recipe_id])
       end
 
-      def ingredient_params
-        params.require(:ingredient).permit(
-          :raw_text, :quantity, :quantity_max, :unit, :unit_normalized,
-          :ingredient_name, :preparation_notes, :is_optional, :position, :group_name
-        )
+      # When raw_text is provided, re-parse it so structured fields stay in sync.
+      def build_ingredient_attrs(permitted)
+        attrs = permitted.to_h
+        if attrs.key?("raw_text") && attrs["raw_text"].present?
+          parsed = IngredientParser::Parser.parse(attrs["raw_text"])
+          attrs.merge!(
+            quantity:          parsed.quantity,
+            quantity_max:      parsed.quantity_max,
+            unit:              parsed.unit,
+            unit_normalized:   parsed.unit_normalized,
+            weight_grams:      parsed.weight_grams,
+            ingredient_name:   parsed.ingredient_name,
+            preparation_notes: parsed.preparation_notes,
+            is_optional:       parsed.is_optional,
+            parse_confidence:  parsed.parse_confidence,
+          )
+        end
+        attrs
       end
 
       def ingredient_json(i)

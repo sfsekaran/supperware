@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import AddRecipePage from './pages/AddRecipePage';
 import RecipeDetailPage from './pages/RecipeDetailPage';
+import RecipeEditPage from './pages/RecipeEditPage';
 import SettingsPage from './pages/SettingsPage';
 import PublicProfilePage from './pages/public/PublicProfilePage';
 import PublicRecipePage from './pages/public/PublicRecipePage';
@@ -48,7 +49,8 @@ export const router = createBrowserRouter([
         children: [
           { path: '/dashboard',       element: <DashboardPage /> },
           { path: '/recipes/new',     element: <AddRecipePage /> },
-          { path: '/recipes/:id',     element: <RecipeDetailPage /> },
+          { path: '/recipes/:id',      element: <RecipeDetailPage /> },
+          { path: '/recipes/:id/edit', element: <RecipeEditPage /> },
           { path: '/settings',        element: <SettingsPage /> },
         ],
       },

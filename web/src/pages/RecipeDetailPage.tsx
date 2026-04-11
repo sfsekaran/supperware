@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, Users, ArrowLeft, ExternalLink, Trash2, Globe, Lock } from 'lucide-react';
+import { Clock, Users, ArrowLeft, ExternalLink, Trash2, Globe, Lock, Pencil } from 'lucide-react';
 import { api } from '../lib/api';
 import { useWakeLock, wakeLockSupported } from '../hooks/useWakeLock';
 import { WakeLockToggle } from '../components/WakeLockToggle';
@@ -131,6 +131,14 @@ export default function RecipeDetailPage() {
         </button>
 
         <div className="flex items-center gap-2">
+          {/* Edit */}
+          <button
+            onClick={() => navigate(`/recipes/${id}/edit`)}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
+            style={{ background: 'var(--color-cream-dark)', color: 'var(--color-charcoal)', border: '1px solid var(--color-border)', cursor: 'pointer' }}>
+            <Pencil size={12} /> Edit
+          </button>
+
           {/* Publish / unpublish */}
           {recipe && (
             <button
