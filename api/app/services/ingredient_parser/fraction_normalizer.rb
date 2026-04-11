@@ -15,7 +15,9 @@ module IngredientParser
     def self.normalize(str)
       str = str.dup
 
-      # Replace unicode vulgar fractions
+      # Handle digit immediately followed by vulgar fraction (e.g. "1½" → "1.5")
+      str.gsub!(/(\d)(#{VULGAR_PATTERN.source})/) { ($1.to_f + VULGAR_FRACTIONS[$2]).to_s }
+      # Replace any remaining standalone vulgar fractions
       str.gsub!(VULGAR_PATTERN) { |m| VULGAR_FRACTIONS[m].to_s }
 
       # Replace slash fractions: whole + fraction "1 3/4" or standalone "3/4"
