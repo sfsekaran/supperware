@@ -75,7 +75,8 @@ module Api
       rescue JSON::ParserError
         render json: { error: "Invalid json_ld param" }, status: :bad_request
       rescue => e
-        render json: { error: e.message }, status: :unprocessable_content
+        Rails.logger.error("RecipeParseController error: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
+        render json: { error: "Failed to process recipe" }, status: :unprocessable_content
       end
     end
   end
