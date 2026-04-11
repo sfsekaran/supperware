@@ -9,6 +9,7 @@ A recipe keeper for people who actually cook. Save recipes from any URL or paste
 | API | Rails 8.1, PostgreSQL, Sidekiq + Redis |
 | Auth | Devise + devise-jwt (Bearer token) |
 | Frontend | React 18, Vite, TanStack Query, Zustand, Tailwind CSS v4 |
+| Extension | Chrome MV3 |
 | Parsing | schema.org JSON-LD (primary), HTML heuristics (fallback), Ollama LLM (text paste) |
 
 ## Structure
@@ -17,8 +18,8 @@ A recipe keeper for people who actually cook. Save recipes from any URL or paste
 supperware/
   api/          Rails API-only app (port 3000)
   web/          React + Vite frontend (port 3001)
-  extension/    Browser extension scaffold (deferred)
-  docs/         Notes, feature ideas, domain options
+  extension/    Chrome MV3 browser extension
+  docs/         Notes, feature ideas
   Makefile      All dev tasks
 ```
 
@@ -65,6 +66,24 @@ All variables live in `api/.env` (gitignored). See `api/.env.example` for the fu
 | `OLLAMA_MODEL` | `qwen2.5:14b` | Model used for text paste parsing |
 | `OLLAMA_KEEP_ALIVE` | `30m` | How long to keep the model loaded between calls |
 | `CORS_ORIGINS` | `http://localhost:3001` | Comma-separated allowed origins for the API |
+
+## Chrome extension
+
+The extension lives in `extension/` and is a Chrome MV3 unpacked extension — no build step required.
+
+**Install:**
+1. Open `chrome://extensions`, enable Developer mode
+2. Click "Load unpacked" and select the `extension/` directory
+3. Open the extension's Options page and paste your API token (find it in the web app under Settings)
+
+**How it works:**
+
+| Page type | What happens |
+|---|---|
+| Has JSON-LD recipe | Extracts it in-page, sends directly to API — saved instantly |
+| No JSON-LD | Shows a text paste textarea; paste the recipe text and save with the source URL attached |
+
+The extension talks to `https://supperware.sathyasekaran.com` by default. You can change the API base URL in Options (useful for local dev — set it to `http://localhost:3000` and add a static API token via the Rails console).
 
 ## Other tasks
 
