@@ -10,8 +10,8 @@ RSpec.describe RecipeParser::PlainTextParser do
         "content" => {
           "title"       => "Simple Pasta",
           "description" => "Quick weeknight pasta.",
-          "ingredients" => ["200g pasta", "2 cloves garlic", "3 tbsp olive oil"],
-          "steps"       => ["Boil pasta.", "Fry garlic.", "Toss and serve."]
+          "ingredients" => [ "200g pasta", "2 cloves garlic", "3 tbsp olive oil" ],
+          "steps"       => [ "Boil pasta.", "Fry garlic.", "Toss and serve." ]
         }.to_json
       }
     }

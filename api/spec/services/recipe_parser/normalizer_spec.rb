@@ -10,7 +10,7 @@ RSpec.describe RecipeParser::Normalizer do
       {
         "name"             => "Sourdough Bread",
         "description"      => "A crusty loaf",
-        "recipeIngredient" => ["2 cups flour", "1 tsp salt"],
+        "recipeIngredient" => [ "2 cups flour", "1 tsp salt" ],
         "recipeInstructions" => [
           { "@type" => "HowToStep", "text" => "Mix ingredients." },
           { "@type" => "HowToStep", "text" => "Bake at 450°F." }
@@ -54,7 +54,7 @@ RSpec.describe RecipeParser::Normalizer do
     end
 
     it "extracts ingredients as plain strings" do
-      expect(normalize(base_raw)[:ingredients]).to eq(["2 cups flour", "1 tsp salt"])
+      expect(normalize(base_raw)[:ingredients]).to eq([ "2 cups flour", "1 tsp salt" ])
     end
 
     it "extracts steps" do
@@ -101,7 +101,7 @@ RSpec.describe RecipeParser::Normalizer do
     end
 
     it "extracts image URL from an array" do
-      raw = base_raw.merge("image" => [{ "url" => "https://example.com/bread.jpg" }])
+      raw = base_raw.merge("image" => [ { "url" => "https://example.com/bread.jpg" } ])
       expect(normalize(raw)[:recipe_attrs][:primary_image_url]).to eq("https://example.com/bread.jpg")
     end
 

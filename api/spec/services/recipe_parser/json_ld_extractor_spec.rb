@@ -47,7 +47,7 @@ RSpec.describe RecipeParser::JsonLdExtractor do
     end
 
     it "handles @type as an array" do
-      html = ld_script({ "@type" => ["Article", "Recipe"], "name" => "Cake" })
+      html = ld_script({ "@type" => [ "Article", "Recipe" ], "name" => "Cake" })
       expect(extract(html)["name"]).to eq("Cake")
     end
 

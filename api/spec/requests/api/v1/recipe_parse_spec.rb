@@ -8,7 +8,7 @@ RSpec.describe "Api::V1::RecipeParse", type: :request do
     {
       "@type"             => "Recipe",
       "name"              => "Chocolate Cake",
-      "recipeIngredient"  => ["2 cups flour", "1 cup sugar"],
+      "recipeIngredient"  => [ "2 cups flour", "1 cup sugar" ],
       "recipeInstructions" => [
         { "@type" => "HowToStep", "text" => "Mix and bake." }
       ]
@@ -18,8 +18,8 @@ RSpec.describe "Api::V1::RecipeParse", type: :request do
   let(:success_result) do
     RecipeParser::ParseResult.new(
       recipe_attrs:     { title: "Chocolate Cake", source_url: "https://example.com" },
-      raw_ingredients:  ["2 cups flour", "1 cup sugar"],
-      steps:            [{ text: "Mix and bake.", section: nil }],
+      raw_ingredients:  [ "2 cups flour", "1 cup sugar" ],
+      steps:            [ { text: "Mix and bake.", section: nil } ],
       parse_confidence: 0.9,
       parsed_format:    "json_ld",
       warnings:         []

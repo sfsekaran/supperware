@@ -5,7 +5,7 @@ RSpec.describe RecipeParser::Orchestrator do
     {
       "@type" => "Recipe",
       "name"  => "Chocolate Cake",
-      "recipeIngredient" => ["2 cups flour", "1 cup sugar"],
+      "recipeIngredient" => [ "2 cups flour", "1 cup sugar" ],
       "recipeInstructions" => [
         { "@type" => "HowToStep", "text" => "Mix ingredients." },
         { "@type" => "HowToStep", "text" => "Bake at 350F for 30 minutes." }
@@ -84,8 +84,8 @@ RSpec.describe RecipeParser::Orchestrator do
     it "calls PlainTextParser and returns result" do
       allow(RecipeParser::PlainTextParser).to receive(:parse).and_return({
         recipe_attrs:    { title: "Pasta", source_url: nil },
-        raw_ingredients: ["200g pasta"],
-        steps:           [{ text: "Boil pasta.", section: nil }]
+        raw_ingredients: [ "200g pasta" ],
+        steps:           [ { text: "Boil pasta.", section: nil } ]
       })
 
       result = described_class.call(text: "Pasta recipe text")
