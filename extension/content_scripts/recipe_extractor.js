@@ -1,15 +1,7 @@
-// Supperware recipe extractor content script
-// Runs on every page. When the popup sends an "extract" message,
-// this script pulls recipe data from the live DOM.
+// Supperware recipe extractor — injected on demand by popup.js
+// Returns extraction result via executeScript return value.
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type !== 'extract') return;
-
-  const result = extractRecipe();
-  sendResponse(result);
-});
-
-function extractRecipe() {
+(function extractRecipe() {
   // Priority 1: JSON-LD
   const scripts = document.querySelectorAll('script[type="application/ld+json"]');
   for (const script of scripts) {
@@ -20,8 +12,10 @@ function extractRecipe() {
         return {
           method: 'json_ld',
           url: location.href,
+          title: recipe.name || null,
+          image: extractImage(recipe.image),
           json_ld: recipe,
-          html: null, // only send HTML if JSON-LD not found
+          html: null,
         };
       }
     } catch (_e) {
@@ -33,18 +27,18 @@ function extractRecipe() {
   return {
     method: 'html',
     url: location.href,
+    title: document.title || null,
+    image: null,
     json_ld: null,
     html: document.documentElement.outerHTML,
   };
-}
+})();
 
 function findRecipeNode(data) {
   if (!data) return null;
-  // Handle @graph arrays
   if (data['@graph']) {
     return data['@graph'].find(n => normalizeType(n['@type']) === 'recipe') ?? null;
   }
-  // Handle arrays of LD blocks
   if (Array.isArray(data)) {
     for (const item of data) {
       const found = findRecipeNode(item);
@@ -60,4 +54,12 @@ function normalizeType(type) {
   if (!type) return '';
   const t = Array.isArray(type) ? type[0] : type;
   return t.replace(/^https?:\/\/schema\.org\//, '').toLowerCase();
+}
+
+function extractImage(image) {
+  if (!image) return null;
+  if (typeof image === 'string') return image;
+  if (Array.isArray(image)) return extractImage(image[0]);
+  if (image.url) return image.url;
+  return null;
 }

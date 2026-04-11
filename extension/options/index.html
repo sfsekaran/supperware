@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supperware — Settings</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@600&family=DM+Sans:wght@400;500&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #FBF7F0;
+      color: #2A2520;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #E2D9CF;
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #2A2520;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: #7A7370;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #2A2520;
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #E2D9CF;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: #FBF7F0;
+      color: #2A2520;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 1.25rem;
+    }
+
+    input:focus { border-color: #5A7052; }
+
+    .hint {
+      font-size: 0.8rem;
+      color: #7A7370;
+      margin-top: -1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .hint a { color: #C1654A; }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background: #5A7052;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #4a5e44; }
+
+    .saved-msg {
+      display: none;
+      text-align: center;
+      margin-top: 1rem;
+      color: #5A7052;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .saved-msg.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Supperware</h1>
+    <p class="subtitle">Configure your extension settings</p>
+
+    <label for="api-token">API Token</label>
+    <input type="password" id="api-token" placeholder="Paste your API token here" autocomplete="off">
+    <p class="hint">
+      Find your token on the
+      <a href="#" id="settings-link">Supperware Settings page</a>.
+    </p>
+
+    <label for="api-base">Supperware URL</label>
+    <input type="text" id="api-base" placeholder="https://supperware.sathyasekaran.com">
+
+    <button id="save-btn">Save Settings</button>
+    <p class="saved-msg" id="saved-msg">Settings saved!</p>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>

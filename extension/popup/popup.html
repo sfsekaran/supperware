@@ -2,16 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Supperware</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div id="app">
-    <h1>Supperware</h1>
-    <p id="status">Detecting recipe...</p>
-    <button id="save-btn" disabled>Save Recipe</button>
-  </div>
+  <div id="app" data-state="detecting">
+
+    <div class="header">
+      <span class="header-logo">Supperware</span>
+    </div>
+
+    <div class="body">
+
+      <!-- setup: no API token configured -->
+      <div class="state state-setup">
+        <p class="setup-msg">
+          To save recipes, enter your API token in settings.
+        </p>
+        <button class="btn btn-primary" id="open-options-btn">Open Settings</button>
+      </div>
+
+      <!-- detecting: injecting extractor -->
+      <div class="state state-detecting">
+        <p class="status-msg"><span class="spinner"></span>Detecting recipe…</p>
+      </div>
+
+      <!-- ready: JSON-LD found, show preview -->
+      <div class="state state-ready">
+        <div class="preview" id="preview-card">
+          <img id="preview-img" class="preview-img" src="" alt="" style="display:none">
+          <div id="preview-img-placeholder" class="preview-img-placeholder"></div>
+          <div class="preview-title" id="preview-title"></div>
+        </div>
+        <button class="btn btn-primary" id="save-json-ld-btn">Save Recipe</button>
+      </div>
+
+      <!-- no-recipe: no JSON-LD, offer text paste -->
+      <div class="state state-no-recipe">
+        <p class="status-msg" style="margin-bottom:10px; text-align:left; color:#2A2520;">
+          No recipe detected automatically.<br>
+          Paste the recipe text below:
+        </p>
+        <textarea id="paste-textarea" placeholder="Paste recipe text here… (Ctrl+A on the page, then Ctrl+C)" maxlength="60000"></textarea>
+        <button class="btn btn-primary" id="save-text-btn">Save with URL</button>
+      </div>
+
+      <!-- saving: synchronous API call in progress -->
+      <div class="state state-saving">
+        <p class="status-msg"><span class="spinner"></span>Saving recipe…</p>
+      </div>
+
+      <!-- polling: async Sidekiq job, text paste path -->
+      <div class="state state-polling">
+        <p class="status-msg"><span class="spinner"></span>Processing recipe…</p>
+        <p class="status-msg" style="font-size:0.78rem; margin-top:4px;">
+          You can close this — it'll appear in your recipes.
+        </p>
+      </div>
+
+      <!-- saved: success -->
+      <div class="state state-saved">
+        <div class="saved-icon">✓</div>
+        <div class="saved-title" id="saved-title"></div>
+        <a class="btn btn-primary link" id="open-recipe-link" href="#" target="_blank" style="text-decoration:none; display:block;">
+          Open in Supperware
+        </a>
+        <button class="btn btn-secondary" id="close-btn">Close</button>
+      </div>
+
+      <!-- error -->
+      <div class="state state-error">
+        <p class="error-msg" id="error-msg"></p>
+        <button class="btn btn-secondary" id="retry-btn">Try Text Paste</button>
+      </div>
+
+    </div><!-- .body -->
+  </div><!-- #app -->
+
   <script src="popup.js"></script>
 </body>
 </html>

@@ -11,8 +11,25 @@ module RecipeParser
   )
 
   module Orchestrator
-    def self.call(url: nil, html: nil, text: nil)
-      if url && html.nil?
+    def self.call(url: nil, html: nil, json_ld: nil, text: nil)
+      # Path 1: pre-parsed JSON-LD from extension (fastest — skip fetch + extraction)
+      if json_ld
+        normalized = Normalizer.normalize(json_ld, source_url: url)
+        confidence = compute_confidence(normalized, format: :json_ld)
+        return ParseResult.new(
+          recipe_attrs:     normalized[:recipe_attrs].merge(parse_confidence: confidence, parsed_format: "json_ld"),
+          raw_ingredients:  normalized[:ingredients],
+          steps:            normalized[:steps],
+          parse_confidence: confidence,
+          parsed_format:    "json_ld",
+          warnings:         normalized[:warnings]
+        )
+      end
+
+      # Path 2: pre-fetched HTML from extension — skip fetch, parse directly
+      # Path 3: URL only — fetch HTML first
+      # Don't fetch if text is provided (treat url as source metadata only)
+      if url && html.nil? && text.nil?
         fetch_result = Fetcher.fetch(url)
         html = fetch_result.html
       end
@@ -20,7 +37,10 @@ module RecipeParser
       if html
         call_html(html, url)
       elsif text
-        call_text(text)
+        result = call_text(text)
+        # Attach source URL when text paste comes from extension with a known URL
+        result.recipe_attrs[:source_url] = url if url && result.recipe_attrs[:source_url].blank?
+        result
       else
         ParseResult.new(error: "No input provided")
       end
