@@ -14,6 +14,7 @@ export default defineConfig({
       '/api/v1/parse_jobs': 'http://localhost:3000',
       '/api/v1/public':     'http://localhost:3000',
       '/api/v1/settings':   'http://localhost:3000',
+      '/api/v1/admin':      'http://localhost:3000',
     },
   },
 })

@@ -12,7 +12,8 @@ module Api
               id:           resource.id,
               email:        resource.email,
               username:     resource.username,
-              display_name: resource.display_name
+              display_name: resource.display_name,
+              admin:        resource.admin
             }
           }, status: :ok
         end

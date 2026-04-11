@@ -30,6 +30,11 @@ Rails.application.routes.draw do
       get "search",   to: "search#index"
       get "settings", to: "settings#show"
 
+      # Admin
+      namespace :admin do
+        resources :users, only: [ :index, :show ]
+      end
+
       # Public (unauthenticated)
       namespace :public do
         get "users/:username",               to: "profiles#show"
