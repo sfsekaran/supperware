@@ -15,3 +15,15 @@ Future enhancements worth revisiting when the time is right.
 **Related:** The `or 2.5 cups King Arthur All-Purpose Flour` substitution on the same line is also silently dropped — that's a separate problem (ingredient alternatives/substitutions are not modelled at all yet).
 
 ---
+
+## AI-assisted ingredient and step grouping
+
+**Problem:** Some recipe sites display clear ingredient sections ("Dough", "Toppings", "Garlic-basil oil") in their UI, but don't encode them in their JSON-LD — `recipeIngredient` is just a flat list. King Arthur Baking is a known example of this. The parser has no signal to group from, so everything lands in one unsectioned list even when the original recipe has meaningful structure.
+
+**Idea:** After parsing, if `group_name` is null on all ingredients (or `section_name` on all steps), run an LLM pass over the flat list and ask it to infer logical groupings. Since Ollama is already in the stack for text paste parsing, this could reuse the same infrastructure.
+
+**Trigger:** Only run when the parsed result has no sections at all — don't touch recipes where the JSON-LD already provided structure.
+
+**Scope:** Probably ingredients only to start; step sections are less commonly needed and harder to get right.
+
+---
