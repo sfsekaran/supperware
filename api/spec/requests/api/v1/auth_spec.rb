@@ -18,7 +18,7 @@ RSpec.describe "Api::V1::Auth", type: :request do
         user: { email: "x@example.com", password: "password123",
                 password_confirmation: "password123", username: "taken" }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

@@ -64,7 +64,7 @@ RSpec.describe "Api::V1::Recipes", type: :request do
     it "returns 422 without a title" do
       post "/api/v1/recipes", headers: headers,
         params: { recipe: { visibility: "private" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

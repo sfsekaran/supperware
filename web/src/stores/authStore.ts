@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   username: string;
   display_name: string | null;
+  admin: boolean;
 }
 
 export interface AuthState {

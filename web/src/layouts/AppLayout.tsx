@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BookOpen, PlusCircle, Settings, LogOut, ChefHat } from 'lucide-react';
+import { BookOpen, PlusCircle, Settings, LogOut, ChefHat, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 
 export default function AppLayout() {
@@ -62,6 +62,7 @@ export default function AppLayout() {
           {sidebarNavItem('/dashboard',   <BookOpen size={17} />,   'My Recipes')}
           {sidebarNavItem('/recipes/new', <PlusCircle size={17} />, 'Add Recipe')}
           {sidebarNavItem('/settings',    <Settings size={17} />,   'Settings')}
+          {user?.admin && sidebarNavItem('/admin/users', <ShieldCheck size={17} />, 'Admin')}
         </nav>
 
         <div className="border-t pt-4 mt-4" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
@@ -99,6 +100,7 @@ export default function AppLayout() {
         {bottomNavItem('/dashboard',   <BookOpen size={20} />,   'Recipes')}
         {bottomNavItem('/recipes/new', <PlusCircle size={20} />, 'Add')}
         {bottomNavItem('/settings',    <Settings size={20} />,   'Settings')}
+        {user?.admin && bottomNavItem('/admin/users', <ShieldCheck size={20} />, 'Admin')}
         <button
           onClick={handleLogout}
           className="flex flex-col items-center gap-1 flex-1 py-2 text-xs font-medium opacity-55 hover:opacity-100 transition-opacity"
