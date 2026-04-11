@@ -86,7 +86,7 @@ module IngredientParser
     "bunch"       => { canonical: "bunch",       normalized: nil,   factor: nil },
     "bunches"     => { canonical: "bunch",       normalized: nil,   factor: nil },
     "drop"        => { canonical: "drop",        normalized: nil,   factor: nil },
-    "drops"       => { canonical: "drop",        normalized: nil,   factor: nil },
+    "drops"       => { canonical: "drop",        normalized: nil,   factor: nil }
   }.freeze
 
   # Sorted longest-first so multi-word units match before single-word ones

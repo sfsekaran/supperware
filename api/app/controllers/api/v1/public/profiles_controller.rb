@@ -8,7 +8,7 @@ module Api
             username:     user.username,
             display_name: user.display_name,
             bio:          user.bio,
-            avatar_url:   user.avatar_url,
+            avatar_url:   user.avatar_url
           }
         end
       end

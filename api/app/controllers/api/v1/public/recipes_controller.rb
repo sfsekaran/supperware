@@ -21,7 +21,7 @@ module Api
             id: r.id, title: r.title, slug: r.slug,
             primary_image_url: r.primary_image_url,
             cuisine: r.cuisine, total_time_minutes: r.total_time_minutes,
-            description: r.description,
+            description: r.description
           }
         end
 
@@ -45,7 +45,7 @@ module Api
             steps: r.steps.map { |s|
               { id: s.id, position: s.position, section_name: s.section_name,
                 instruction: s.instruction }
-            },
+            }
           }
         end
       end

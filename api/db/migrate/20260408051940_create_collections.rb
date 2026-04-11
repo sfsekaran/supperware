@@ -10,7 +10,7 @@ class CreateCollections < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :collections, [:user_id, :slug], unique: true
+    add_index :collections, [ :user_id, :slug ], unique: true
 
     create_table :collection_recipes do |t|
       t.references :collection, null: false, foreign_key: true
@@ -19,7 +19,7 @@ class CreateCollections < ActiveRecord::Migration[8.1]
       t.datetime   :added_at,   null: false, default: -> { "CURRENT_TIMESTAMP" }
     end
 
-    add_index :collection_recipes, [:collection_id, :recipe_id], unique: true
-    add_index :collection_recipes, [:collection_id, :position]
+    add_index :collection_recipes, [ :collection_id, :recipe_id ], unique: true
+    add_index :collection_recipes, [ :collection_id, :position ]
   end
 end

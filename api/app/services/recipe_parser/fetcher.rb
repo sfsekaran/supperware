@@ -28,7 +28,7 @@ module RecipeParser
       IPAddr.new("192.168.0.0/16"),
       IPAddr.new("169.254.0.0/16"),   # link-local / AWS metadata endpoint
       IPAddr.new("::1/128"),
-      IPAddr.new("fc00::/7"),
+      IPAddr.new("fc00::/7")
     ].freeze
 
     def self.fetch(url)

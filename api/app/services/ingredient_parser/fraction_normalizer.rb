@@ -6,7 +6,7 @@ module IngredientParser
       "⅓" => 1.0/3, "⅔" => 2.0/3,
       "⅛" => 0.125, "⅜" => 0.375, "⅝" => 0.625, "⅞" => 0.875,
       "⅙" => 1.0/6, "⅚" => 5.0/6,
-      "⅕" => 0.2,  "⅖" => 0.4,  "⅗" => 0.6,  "⅘" => 0.8,
+      "⅕" => 0.2,  "⅖" => 0.4,  "⅗" => 0.6,  "⅘" => 0.8
     }.freeze
 
     VULGAR_PATTERN = Regexp.new(VULGAR_FRACTIONS.keys.map { |k| Regexp.escape(k) }.join("|"))

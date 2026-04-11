@@ -13,6 +13,6 @@ class CreateSteps < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :steps, [:recipe_id, :position], name: "index_steps_on_recipe_id_and_position"
+    add_index :steps, [ :recipe_id, :position ], name: "index_steps_on_recipe_id_and_position"
   end
 end

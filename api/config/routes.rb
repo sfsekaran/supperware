@@ -18,8 +18,8 @@ Rails.application.routes.draw do
       get  "parse_jobs/:id",           to: "parse_jobs#show"
 
       resources :recipes do
-        resources :ingredients, only: [:index, :create, :update, :destroy]
-        resources :steps,       only: [:index, :create, :update, :destroy]
+        resources :ingredients, only: [ :index, :create, :update, :destroy ]
+        resources :steps,       only: [ :index, :create, :update, :destroy ]
       end
 
       resources :collections do

@@ -11,6 +11,6 @@ class CreateParseJobs < ActiveRecord::Migration[8.1]
     end
 
     add_index :parse_jobs, :status
-    add_index :parse_jobs, [:user_id, :status]
+    add_index :parse_jobs, [ :user_id, :status ]
   end
 end

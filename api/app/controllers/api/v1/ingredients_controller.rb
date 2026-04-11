@@ -64,7 +64,7 @@ module Api
           ingredient_name:   i.ingredient_name,
           preparation_notes: i.preparation_notes,
           is_optional:       i.is_optional,
-          parse_confidence:  i.parse_confidence,
+          parse_confidence:  i.parse_confidence
         }
       end
     end

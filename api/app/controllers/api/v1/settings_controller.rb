@@ -9,7 +9,7 @@ module Api
           email:        current_user.email,
           username:     current_user.username,
           display_name: current_user.display_name,
-          public_profile: current_user.public_profile,
+          public_profile: current_user.public_profile
         }
       end
     end

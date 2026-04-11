@@ -66,13 +66,13 @@ module RecipeParser
         keep_alive: ENV.fetch("OLLAMA_KEEP_ALIVE", "30m"),
         messages: [
           { role: "system", content: PROMPT },
-          { role: "user",   content: "Extract the recipe from this text:\n\n#{text}" },
+          { role: "user",   content: "Extract the recipe from this text:\n\n#{text}" }
         ],
         options: {
           num_ctx:     8192,  # context window — enough for a full page of pasted text
           num_predict: 4096,  # max output tokens — enough for a long recipe
-          temperature: 0.0,   # deterministic, no creativity needed
-        },
+          temperature: 0.0   # deterministic, no creativity needed
+        }
       })
 
       raise "Ollama error #{res.status}: #{res.body.dig("error") || res.body}" unless res.success?
@@ -100,7 +100,7 @@ module RecipeParser
         if text.match?(/\d+\.\s+\S/)
           text.split(/(?=\d+\.\s+)/).map { |p| p.gsub(/\A\d+\.\s*/, "").strip }.reject(&:empty?)
         else
-          [text]
+          [ text ]
         end
       end
     end
@@ -134,12 +134,12 @@ module RecipeParser
           yield_unit:         json["yield_unit"].presence,
           yield_description:  json["yield_description"].presence,
           parsed_format:      "text_paste",
-          parse_confidence:   nil,
+          parse_confidence:   nil
         },
         ingredients: Array(json["ingredients"]).filter_map(&:presence),
         steps:       split_steps(Array(json["steps"])).map { |s| { text: s, section: nil } },
         warnings:    [],
-        error:       nil,
+        error:       nil
       }
     end
   end

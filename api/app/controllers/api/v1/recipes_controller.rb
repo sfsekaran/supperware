@@ -2,7 +2,7 @@ module Api
   module V1
     class RecipesController < ApplicationController
       before_action :authenticate_user!
-      before_action :set_recipe, only: [:show, :update, :destroy]
+      before_action :set_recipe, only: [ :show, :update, :destroy ]
 
       def index
         recipes = current_user.recipes.active.order(created_at: :desc)
@@ -82,7 +82,7 @@ module Api
           parse_confidence:   r.parse_confidence,
           parsed_format:      r.parsed_format,
           created_at:         r.created_at,
-          updated_at:         r.updated_at,
+          updated_at:         r.updated_at
         }
 
         if include_details
@@ -109,7 +109,7 @@ module Api
           ingredient_name:   i.ingredient_name,
           preparation_notes: i.preparation_notes,
           is_optional:       i.is_optional,
-          parse_confidence:  i.parse_confidence,
+          parse_confidence:  i.parse_confidence
         }
       end
 
@@ -122,7 +122,7 @@ module Api
           duration_minutes: s.duration_minutes,
           temperature:     s.temperature,
           tip:             s.tip,
-          image_url:       s.image_url,
+          image_url:       s.image_url
         }
       end
     end

@@ -45,7 +45,7 @@ module RecipeParser
         ParseResult.new(error: "No input provided")
       end
     rescue FetchError => e
-      ParseResult.new(error: e.message, warnings: [e.reason.to_s])
+      ParseResult.new(error: e.message, warnings: [ e.reason.to_s ])
     end
 
     private
@@ -70,7 +70,7 @@ module RecipeParser
         # TODO: Phase 2 — add Microdata, RDFa, HTML heuristic extractors
         ParseResult.new(
           error:    "Could not extract recipe data. Try pasting the recipe text instead.",
-          warnings: ["no_structured_data"]
+          warnings: [ "no_structured_data" ]
         )
       end
     end

@@ -11,7 +11,7 @@ module Api
           url:              job.url,
           result_recipe_id: job.result_recipe_id,
           error_message:    job.error_message,
-          completed_at:     job.completed_at,
+          completed_at:     job.completed_at
         }
       end
     end

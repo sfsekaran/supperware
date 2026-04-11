@@ -8,7 +8,7 @@ module RecipeParser
         recipe_attrs:  build_recipe_attrs(raw, source_url),
         ingredients:   extract_ingredients(raw),
         steps:         extract_steps(raw),
-        warnings:      [],
+        warnings:      []
       }
     end
 
@@ -33,7 +33,7 @@ module RecipeParser
         keywords:           extract_keywords(raw["keywords"]),
         nutrition:          extract_nutrition(raw["nutrition"]),
         raw_scraped_json:   raw,
-        parsed_format:      "json_ld",
+        parsed_format:      "json_ld"
       }
     end
 

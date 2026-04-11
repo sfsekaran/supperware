@@ -60,25 +60,25 @@ module IngredientParser
 
     def self.extract_quantity(text)
       if (m = RANGE_PATTERN.match(text))
-        [m[1].to_f, m[2].to_f, text[m.end(0)..]]
+        [ m[1].to_f, m[2].to_f, text[m.end(0)..] ]
       elsif (m = QUANTITY_PATTERN.match(text))
-        [m[1].to_f, nil, text[m.end(0)..]]
+        [ m[1].to_f, nil, text[m.end(0)..] ]
       else
-        [nil, nil, text]
+        [ nil, nil, text ]
       end
     end
 
     def self.extract_unit(text)
       m = UNIT_PATTERN.match(text)
-      return [nil, nil, text] unless m
+      return [ nil, nil, text ] unless m
 
       entry = UnitRegistry.lookup(m[1])
-      return [nil, nil, text] unless entry
+      return [ nil, nil, text ] unless entry
 
       # Remove matched unit from text (handle leading/trailing spaces)
       remaining = (text[0...m.begin(0)] + text[m.end(0)..]).strip
 
-      [entry[:canonical], entry[:normalized], remaining]
+      [ entry[:canonical], entry[:normalized], remaining ]
     end
 
     def self.extract_name_and_notes(text)
@@ -97,7 +97,7 @@ module IngredientParser
         notes = nil
       end
 
-      [name, notes]
+      [ name, notes ]
     end
 
     def self.compute_confidence(quantity, unit, name)

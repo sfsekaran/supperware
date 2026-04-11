@@ -40,7 +40,7 @@ module Api
           position:         s.position,
           section_name:     s.section_name,
           instruction:      s.instruction,
-          duration_minutes: s.duration_minutes,
+          duration_minutes: s.duration_minutes
         }
       end
     end
