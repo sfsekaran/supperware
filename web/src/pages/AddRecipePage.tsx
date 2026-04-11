@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Link2, FileText, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Link2, FileText, Loader2, CheckCircle, AlertCircle, PenLine } from 'lucide-react';
 import { api } from '../lib/api';
 
-type Tab = 'url' | 'text';
+type Tab = 'url' | 'text' | 'manual';
 
 interface ParseJob {
   id: number;
@@ -56,8 +56,23 @@ export default function AddRecipePage() {
     parseMutation.mutate();
   };
 
+  const [manualTitle, setManualTitle] = useState('');
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post<{ id: number }>('/api/v1/recipes', { recipe: { title: manualTitle } });
+      return data;
+    },
+    onSuccess: (data) => navigate(`/recipes/${data.id}/edit`),
+  });
+
   const isPolling = jobId !== null && job?.status !== 'done' && job?.status !== 'failed';
   const isFailed  = job?.status === 'failed';
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate();
+  };
 
   const tabStyle = (t: Tab) => ({
     padding: '0.6rem 1.25rem',
@@ -88,10 +103,13 @@ export default function AddRecipePage() {
         <button style={tabStyle('text')} onClick={() => setTab('text')}>
           <span className="flex items-center gap-2"><FileText size={14} /> Paste text</span>
         </button>
+        <button style={tabStyle('manual')} onClick={() => setTab('manual')}>
+          <span className="flex items-center gap-2"><PenLine size={14} /> By hand</span>
+        </button>
       </div>
 
-      {/* Status messages */}
-      {isPolling && (
+      {/* Status messages (URL/text tabs only) */}
+      {tab !== 'manual' && isPolling && (
         <div className="flex items-center gap-3 px-5 py-4 rounded-xl mb-6" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
           <Loader2 size={18} className="animate-spin" style={{ color: 'var(--color-sage)' }} />
           <div>
@@ -101,7 +119,7 @@ export default function AddRecipePage() {
         </div>
       )}
 
-      {isFailed && (
+      {tab !== 'manual' && isFailed && (
         <div className="flex items-start gap-3 px-5 py-4 rounded-xl mb-6" style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
           <AlertCircle size={18} style={{ color: '#ef4444', flexShrink: 0, marginTop: 2 }} />
           <div>
@@ -121,7 +139,45 @@ export default function AddRecipePage() {
         </div>
       )}
 
-      {/* Form */}
+      {/* Manual entry form */}
+      {tab === 'manual' && (
+        <form onSubmit={handleManualSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>Recipe title</label>
+            <input
+              type="text"
+              value={manualTitle}
+              onChange={(e) => setManualTitle(e.target.value)}
+              required
+              autoFocus
+              placeholder="e.g. Sourdough focaccia"
+              className="px-4 py-3 rounded-xl text-base outline-none"
+              style={{ border: '1.5px solid var(--color-border)', background: 'white', color: 'var(--color-charcoal)' }}
+            />
+            <p className="text-xs mt-1" style={{ color: 'var(--color-warm-gray)' }}>
+              You'll be taken to the editor to add ingredients, steps, and everything else.
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={createMutation.isPending || !manualTitle.trim()}
+            className="py-3 rounded-xl font-semibold text-base flex items-center justify-center gap-2"
+            style={{
+              background: 'var(--color-terra)', color: 'white', border: 'none',
+              cursor: createMutation.isPending || !manualTitle.trim() ? 'not-allowed' : 'pointer',
+              opacity: createMutation.isPending || !manualTitle.trim() ? 0.7 : 1,
+            }}
+          >
+            {createMutation.isPending ? <><Loader2 size={17} className="animate-spin" /> Creating…</> : <><PenLine size={17} /> Create &amp; edit</>}
+          </button>
+          {createMutation.isError && (
+            <p className="text-sm" style={{ color: '#b91c1c' }}>{(createMutation.error as Error).message}</p>
+          )}
+        </form>
+      )}
+
+      {/* URL / text form */}
+      {tab !== 'manual' && (
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {tab === 'url' ? (
           <div className="flex flex-col gap-1">
@@ -173,6 +229,7 @@ export default function AddRecipePage() {
           )}
         </button>
       </form>
+      )}
     </div>
   );
 }
