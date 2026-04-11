@@ -75,7 +75,7 @@ module RecipeParser
         },
       })
 
-      raise "Ollama error: #{res.status}" unless res.success?
+      raise "Ollama error #{res.status}: #{res.body.dig("error") || res.body}" unless res.success?
       content = res.body.dig("message", "content") or raise "Empty response from Ollama"
       Rails.logger.debug("[PlainTextParser] Ollama raw response: #{content.truncate(500)}")
       content
