@@ -2,6 +2,8 @@
 // Returns extraction result via executeScript return value.
 
 (function extractRecipe() {
+  const ogImage = document.querySelector('meta[property="og:image"]')?.content || null;
+
   // Priority 1: JSON-LD
   const scripts = document.querySelectorAll('script[type="application/ld+json"]');
   for (const script of scripts) {
@@ -12,9 +14,10 @@
         return {
           method: 'json_ld',
           url: location.href,
-          title: recipe.name || null,
-          image: extractImage(recipe.image),
+          title: recipe.name || recipe.headline || null,
+          image: extractImage(recipe.image) || ogImage,
           json_ld: recipe,
+          og_image: ogImage,
           html: null,
         };
       }
@@ -28,8 +31,9 @@
     method: 'html',
     url: location.href,
     title: document.title || null,
-    image: null,
+    image: ogImage,
     json_ld: null,
+    og_image: ogImage,
     html: document.documentElement.outerHTML,
   };
 })();

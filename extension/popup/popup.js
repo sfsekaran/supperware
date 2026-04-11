@@ -134,7 +134,7 @@ function showSaved(recipeId, title, apiBase) {
         const data = await apiRequest('/recipes/parse', {
           ...settings,
           method: 'POST',
-          body: { json_ld: extraction.json_ld, url: extraction.url },
+          body: { json_ld: extraction.json_ld, url: extraction.url, og_image: extraction.og_image },
         });
         showSaved(data.recipe_id, extraction.title || extraction.json_ld?.name, settings.apiBase);
       } catch (e) {
@@ -151,7 +151,7 @@ function showSaved(recipeId, title, apiBase) {
       const data = await apiRequest('/recipes/parse', {
         ...settings,
         method: 'POST',
-        body: { html: extraction.html, url: extraction.url },
+        body: { html: extraction.html, url: extraction.url, og_image: extraction.og_image },
       });
       showSaved(data.recipe_id, extraction.title, settings.apiBase);
     } catch (e) {
