@@ -14,7 +14,7 @@ module RecipeParser
 
     def self.build_recipe_attrs(raw, source_url)
       {
-        title:              text(raw["name"]),
+        title:              text(raw["name"]).presence || text(raw["headline"]),
         description:        text(raw["description"]),
         source_url:         source_url,
         source_author:      extract_author(raw["author"]),

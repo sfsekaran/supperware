@@ -4,10 +4,11 @@ module Api
       before_action :authenticate_user!
 
       def create
-        url     = params[:url].presence
-        text    = params[:text].presence
-        html    = params[:html].presence
-        json_ld = params[:json_ld].presence
+        url      = params[:url].presence
+        text     = params[:text].presence
+        html     = params[:html].presence
+        json_ld  = params[:json_ld].presence
+        og_image = params[:og_image].presence
 
         unless url || text || html || json_ld
           return render json: { error: "Provide a url, text, html, or json_ld param" }, status: :bad_request
@@ -15,7 +16,7 @@ module Api
 
         # Sync path: json_ld or html provided — process inline, no job queue needed
         if json_ld || html
-          return process_sync(url: url, html: html, json_ld: json_ld)
+          return process_sync(url: url, html: html, json_ld: json_ld, og_image: og_image)
         end
 
         # Async path: url-only or text — use Sidekiq job
@@ -26,7 +27,7 @@ module Api
 
       private
 
-      def process_sync(url:, html:, json_ld:)
+      def process_sync(url:, html:, json_ld:, og_image: nil)
         parsed_json_ld = json_ld.is_a?(String) ? JSON.parse(json_ld) : json_ld.to_unsafe_h
 
         result = RecipeParser::Orchestrator.call(url: url, html: html, json_ld: parsed_json_ld)
@@ -35,8 +36,12 @@ module Api
           return render json: { error: result.error }, status: :unprocessable_entity
         end
 
+        # Use og:image as fallback when the JSON-LD had no image field
+        attrs = result.recipe_attrs
+        attrs[:primary_image_url] ||= og_image
+
         recipe = ActiveRecord::Base.transaction do
-          r = current_user.recipes.create!(result.recipe_attrs.merge(status: "saved"))
+          r = current_user.recipes.create!(attrs.merge(status: "saved"))
 
           result.raw_ingredients.each_with_index do |raw_text, i|
             parsed = IngredientParser::Parser.parse(raw_text)
