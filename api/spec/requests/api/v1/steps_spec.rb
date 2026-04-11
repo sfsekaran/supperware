@@ -12,6 +12,7 @@ RSpec.describe "Api::V1::Steps", type: :request do
 
       get "/api/v1/recipes/#{recipe.id}/steps", headers: headers
       body = JSON.parse(response.body)
+      expect(response).to have_http_status(:ok)
       expect(body.first["instruction"]).to eq("First")
     end
   end

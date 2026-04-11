@@ -117,7 +117,7 @@ RSpec.describe RecipeParser::Normalizer do
       expect(normalize(base_raw)[:recipe_attrs][:cuisine]).to eq("American")
     end
 
-    it "handles nil gracefully" do
+    it "handles empty hash gracefully" do
       result = normalize({})
       expect(result[:recipe_attrs][:title]).to be_nil
       expect(result[:ingredients]).to eq([])
