@@ -1,4 +1,4 @@
-.PHONY: help dev api web db sidekiq setup migrate seed logs ps stop reset
+.PHONY: help dev api web db sidekiq setup migrate seed logs ps stop reset install-hooks
 
 # Default target
 help:
@@ -23,6 +23,7 @@ help:
 	@echo "  make console   Open Rails console"
 	@echo "  make routes    Print Rails routes"
 	@echo "  make test      Run RSpec tests"
+	@echo "  make install-hooks  Install git pre-push hook"
 
 # ── Dev servers ───────────────────────────────────────────────────────────────
 
@@ -113,6 +114,8 @@ setup: db
 	cd web && npm install
 	@echo "==> Setting up database..."
 	cd api && bundle exec rails db:create db:migrate
+	@echo "==> Installing git hooks..."
+	$(MAKE) install-hooks
 	@echo ""
 	@echo "Setup complete. Run 'make dev' to start."
 
@@ -120,3 +123,8 @@ setup: db
 
 test:
 	cd api && bundle exec rspec
+
+install-hooks:
+	cp scripts/pre-push .git/hooks/pre-push
+	chmod +x .git/hooks/pre-push
+	@echo "pre-push hook installed."

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Pre-push hook: runs linters and tests before allowing a push.
+# Install via: make install-hooks
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+echo "▶ RuboCop..."
+(cd "$ROOT/api" && bundle exec rubocop --parallel --format quiet)
+
+echo "▶ ESLint..."
+(cd "$ROOT/web" && npm run lint --silent)
+
+echo "▶ TypeScript..."
+(cd "$ROOT/web" && npx tsc --noEmit)
+
+echo "▶ RSpec..."
+(cd "$ROOT/api" && RAILS_ENV=test bundle exec rspec)
+
+echo "✓ All checks passed."
