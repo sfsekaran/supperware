@@ -17,7 +17,7 @@ module Api
           }, status: :ok
         end
 
-        def respond_to_on_destroy
+        def respond_to_on_destroy(*_args)
           if current_user
             render json: { message: "Signed out successfully." }, status: :ok
           else
