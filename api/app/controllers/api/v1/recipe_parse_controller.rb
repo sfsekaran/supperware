@@ -33,7 +33,7 @@ module Api
         result = RecipeParser::Orchestrator.call(url: url, html: html, json_ld: parsed_json_ld)
 
         if result.error
-          return render json: { error: result.error }, status: :unprocessable_entity
+          return render json: { error: result.error }, status: :unprocessable_content
         end
 
         # Use og:image as fallback when the JSON-LD had no image field
@@ -75,7 +75,7 @@ module Api
       rescue JSON::ParserError
         render json: { error: "Invalid json_ld param" }, status: :bad_request
       rescue => e
-        render json: { error: e.message }, status: :unprocessable_entity
+        render json: { error: e.message }, status: :unprocessable_content
       end
     end
   end

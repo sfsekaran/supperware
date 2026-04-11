@@ -74,6 +74,18 @@ RSpec.describe "Api::V1::Admin::Users", type: :request do
         expect(found["recipe_count"]).to eq(3)
       end
 
+      it "still includes users whose recipes are all soft-deleted" do
+        all_deleted_user = create(:user)
+        recipe = create(:recipe, user: all_deleted_user)
+        recipe.update_column(:deleted_at, Time.current)
+
+        get "/api/v1/admin/users", headers: admin_headers
+        body = JSON.parse(response.body)
+        found = body["users"].find { |u| u["id"] == all_deleted_user.id }
+        expect(found).to be_present
+        expect(found["recipe_count"]).to eq(0)
+      end
+
       it "exposes public_profile and admin flags" do
         get "/api/v1/admin/users", headers: admin_headers
         body = JSON.parse(response.body)

@@ -9,9 +9,8 @@ module Api
           total = User.count
 
           users = User
-            .select("users.*, COUNT(recipes.id) AS recipe_count")
+            .select("users.*, COUNT(CASE WHEN recipes.id IS NOT NULL AND recipes.deleted_at IS NULL THEN 1 END) AS recipe_count")
             .left_joins(:recipes)
-            .where("recipes.id IS NULL OR recipes.deleted_at IS NULL")
             .group("users.id")
             .order(created_at: :desc)
             .offset((page - 1) * PER_PAGE)
