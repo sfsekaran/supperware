@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, Users, ArrowLeft, ExternalLink } from 'lucide-react';
 import { api } from '../../lib/api';
-import { useWakeLock, wakeLockSupported } from '../../hooks/useWakeLock';
+import { useWakeLock } from '../../hooks/useWakeLock';
 import { WakeLockToggle } from '../../components/WakeLockToggle';
 
 interface PublicRecipe {

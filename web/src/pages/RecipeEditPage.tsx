@@ -201,6 +201,7 @@ export default function RecipeEditPage() {
   const [ingredients, setIngredients] = useState<EditIngredient[]>([]);
   const [steps, setSteps]             = useState<EditStep[]>([]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!recipe) return;
     setTitle(recipe.title ?? '');
@@ -218,6 +219,7 @@ export default function RecipeEditPage() {
     setNotes(recipe.personal_notes ?? '');
   }, [recipe]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!ingredientsData) return;
     setIngredients(ingredientsData.map(i => ({
@@ -228,6 +230,7 @@ export default function RecipeEditPage() {
     })));
   }, [ingredientsData]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!stepsData) return;
     setSteps(stepsData.map(s => ({

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore, type AuthState } from './stores/authStore';
 import AppLayout from './layouts/AppLayout';

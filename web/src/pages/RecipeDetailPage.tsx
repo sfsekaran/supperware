@@ -78,10 +78,10 @@ export default function RecipeDetailPage() {
   });
 
   const toggleIngredient = (id: number) =>
-    setCheckedIngredients((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setCheckedIngredients((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   const toggleStep = (id: number) =>
-    setCheckedSteps((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setCheckedSteps((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   if (isLoading) return (
     <div className="p-8">
