@@ -89,10 +89,10 @@ RSpec.describe "Api::V1::RecipeParse", type: :request do
         )
       end
 
-      it "returns 422 unprocessable_entity" do
+      it "returns 422 unprocessable_content" do
         post "/api/v1/recipes/parse", headers: headers,
           params: { json_ld: json_ld_data.to_json }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(JSON.parse(response.body)["error"]).to be_present
       end
     end
