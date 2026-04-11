@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save, Plus, Trash2, GripVertical } from 'lucide-react';
@@ -153,102 +153,42 @@ function SortableStepRow({ step, index, onChange, onDelete }: {
   );
 }
 
-export default function RecipeEditPage() {
-  const { id } = useParams<{ id: string }>();
+// Inner form — rendered only after all data is loaded, so state can be
+// initialized directly from props without useEffect.
+function RecipeEditForm({ id, recipe, ingredientsData, stepsData }: {
+  id: string;
+  recipe: Recipe;
+  ingredientsData: Ingredient[];
+  stepsData: Step[];
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: recipe, isLoading: recipeLoading } = useQuery({
-    queryKey: ['recipe', id],
-    queryFn: async () => {
-      const { data } = await api.get<Recipe>(`/api/v1/recipes/${id}`);
-      return data;
-    },
-  });
+  const [title, setTitle]             = useState(recipe.title ?? '');
+  const [description, setDescription] = useState(recipe.description ?? '');
+  const [cuisine, setCuisine]         = useState(recipe.cuisine ?? '');
+  const [category, setCategory]       = useState(recipe.category ?? '');
+  const [prepTime, setPrepTime]       = useState(recipe.prep_time_minutes?.toString() ?? '');
+  const [cookTime, setCookTime]       = useState(recipe.cook_time_minutes?.toString() ?? '');
+  const [totalTime, setTotalTime]     = useState(recipe.total_time_minutes?.toString() ?? '');
+  const [yieldQty, setYieldQty]       = useState(recipe.yield_quantity?.toString() ?? '');
+  const [yieldUnit, setYieldUnit]     = useState(recipe.yield_unit ?? '');
+  const [imageUrl, setImageUrl]       = useState(recipe.primary_image_url ?? '');
+  const [sourceUrl, setSourceUrl]     = useState(recipe.source_url ?? '');
+  const [visibility, setVisibility]   = useState<'private' | 'unlisted' | 'public'>(recipe.visibility ?? 'private');
+  const [notes, setNotes]             = useState(recipe.personal_notes ?? '');
 
-  const { data: ingredientsData, isLoading: ingredientsLoading } = useQuery({
-    queryKey: ['recipe_ingredients', id],
-    queryFn: async () => {
-      const { data } = await api.get<Ingredient[]>(`/api/v1/recipes/${id}/ingredients`);
-      return data;
-    },
-  });
+  const [ingredients, setIngredients] = useState<EditIngredient[]>(() =>
+    ingredientsData.map(i => ({ clientId: uid(), id: i.id, raw_text: i.raw_text, group_name: i.group_name ?? '' }))
+  );
+  const [steps, setSteps] = useState<EditStep[]>(() =>
+    stepsData.map(s => ({ clientId: uid(), id: s.id, instruction: s.instruction, section_name: s.section_name ?? '' }))
+  );
 
-  const { data: stepsData, isLoading: stepsLoading } = useQuery({
-    queryKey: ['recipe_steps', id],
-    queryFn: async () => {
-      const { data } = await api.get<Step[]>(`/api/v1/recipes/${id}/steps`);
-      return data;
-    },
-  });
-
-  // Metadata state
-  const [title, setTitle]             = useState('');
-  const [description, setDescription] = useState('');
-  const [cuisine, setCuisine]         = useState('');
-  const [category, setCategory]       = useState('');
-  const [prepTime, setPrepTime]       = useState('');
-  const [cookTime, setCookTime]       = useState('');
-  const [totalTime, setTotalTime]     = useState('');
-  const [yieldQty, setYieldQty]       = useState('');
-  const [yieldUnit, setYieldUnit]     = useState('');
-  const [imageUrl, setImageUrl]       = useState('');
-  const [sourceUrl, setSourceUrl]     = useState('');
-  const [visibility, setVisibility]   = useState<'private' | 'unlisted' | 'public'>('private');
-  const [notes, setNotes]             = useState('');
-
-  // Editable lists
-  const [ingredients, setIngredients] = useState<EditIngredient[]>([]);
-  const [steps, setSteps]             = useState<EditStep[]>([]);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    if (!recipe) return;
-    setTitle(recipe.title ?? '');
-    setDescription(recipe.description ?? '');
-    setCuisine(recipe.cuisine ?? '');
-    setCategory(recipe.category ?? '');
-    setPrepTime(recipe.prep_time_minutes?.toString() ?? '');
-    setCookTime(recipe.cook_time_minutes?.toString() ?? '');
-    setTotalTime(recipe.total_time_minutes?.toString() ?? '');
-    setYieldQty(recipe.yield_quantity?.toString() ?? '');
-    setYieldUnit(recipe.yield_unit ?? '');
-    setImageUrl(recipe.primary_image_url ?? '');
-    setSourceUrl(recipe.source_url ?? '');
-    setVisibility(recipe.visibility ?? 'private');
-    setNotes(recipe.personal_notes ?? '');
-  }, [recipe]);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    if (!ingredientsData) return;
-    setIngredients(ingredientsData.map(i => ({
-      clientId: uid(),
-      id:        i.id,
-      raw_text:  i.raw_text,
-      group_name: i.group_name ?? '',
-    })));
-  }, [ingredientsData]);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    if (!stepsData) return;
-    setSteps(stepsData.map(s => ({
-      clientId:    uid(),
-      id:          s.id,
-      instruction: s.instruction,
-      section_name: s.section_name ?? '',
-    })));
-  }, [stepsData]);
-
-  const isLoading = recipeLoading || ingredientsLoading || stepsLoading;
-
-  // Save all changes in parallel
   const saveMutation = useMutation({
     mutationFn: async () => {
       const ops: Promise<unknown>[] = [];
 
-      // Metadata
       ops.push(api.patch(`/api/v1/recipes/${id}`, {
         recipe: {
           title,
@@ -267,7 +207,6 @@ export default function RecipeEditPage() {
         },
       }));
 
-      // Ingredients: upsert existing, create new
       ingredients.forEach((ing, idx) => {
         const body = { ingredient: { raw_text: ing.raw_text, group_name: ing.group_name || null, position: idx + 1 } };
         if (ing.id) {
@@ -277,7 +216,6 @@ export default function RecipeEditPage() {
         }
       });
 
-      // Steps: upsert existing, create new
       steps.forEach((step, idx) => {
         const body = { step: { instruction: step.instruction, section_name: step.section_name || null, position: idx + 1 } };
         if (step.id) {
@@ -299,16 +237,12 @@ export default function RecipeEditPage() {
   });
 
   const deleteIngredient = async (ing: EditIngredient) => {
-    if (ing.id) {
-      await api.delete(`/api/v1/recipes/${id}/ingredients/${ing.id}`);
-    }
+    if (ing.id) await api.delete(`/api/v1/recipes/${id}/ingredients/${ing.id}`);
     setIngredients(prev => prev.filter(i => i.clientId !== ing.clientId));
   };
 
   const deleteStep = async (step: EditStep) => {
-    if (step.id) {
-      await api.delete(`/api/v1/recipes/${id}/steps/${step.id}`);
-    }
+    if (step.id) await api.delete(`/api/v1/recipes/${id}/steps/${step.id}`);
     setSteps(prev => prev.filter(s => s.clientId !== step.clientId));
   };
 
@@ -323,33 +257,19 @@ export default function RecipeEditPage() {
   const onIngredientDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (over && active.id !== over.id) {
-      setIngredients(prev => {
-        const oldIdx = prev.findIndex(i => i.clientId === active.id);
-        const newIdx = prev.findIndex(i => i.clientId === over.id);
-        return arrayMove(prev, oldIdx, newIdx);
-      });
+      setIngredients(prev => arrayMove(prev, prev.findIndex(i => i.clientId === active.id), prev.findIndex(i => i.clientId === over.id)));
     }
   };
 
   const onStepDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (over && active.id !== over.id) {
-      setSteps(prev => {
-        const oldIdx = prev.findIndex(s => s.clientId === active.id);
-        const newIdx = prev.findIndex(s => s.clientId === over.id);
-        return arrayMove(prev, oldIdx, newIdx);
-      });
+      setSteps(prev => arrayMove(prev, prev.findIndex(s => s.clientId === active.id), prev.findIndex(s => s.clientId === over.id)));
     }
   };
 
-  if (isLoading) return (
-    <div className="p-8 text-center" style={{ color: 'var(--color-warm-gray)' }}>Loading…</div>
-  );
-
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button onClick={() => navigate(`/recipes/${id}`)}
           className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70"
@@ -378,30 +298,25 @@ export default function RecipeEditPage() {
         </div>
       )}
 
-      {/* Basic info */}
       {field('Title', <Input value={title} onChange={setTitle} placeholder="Recipe title" />)}
       {field('Description', <Textarea value={description} onChange={setDescription} placeholder="Brief description" rows={3} />)}
 
-      {/* Classification */}
       <div className="grid grid-cols-2 gap-4">
         {field('Cuisine', <Input value={cuisine} onChange={setCuisine} placeholder="e.g. Italian" />)}
         {field('Category', <Input value={category} onChange={setCategory} placeholder="e.g. Bread" />)}
       </div>
 
-      {/* Times */}
       <div className="grid grid-cols-3 gap-4">
         {field('Prep time (min)', <Input type="number" value={prepTime} onChange={setPrepTime} placeholder="0" />)}
         {field('Cook time (min)', <Input type="number" value={cookTime} onChange={setCookTime} placeholder="0" />)}
         {field('Total time (min)', <Input type="number" value={totalTime} onChange={setTotalTime} placeholder="0" />)}
       </div>
 
-      {/* Yield */}
       <div className="grid grid-cols-2 gap-4">
         {field('Servings', <Input type="number" value={yieldQty} onChange={setYieldQty} placeholder="4" />)}
         {field('Unit', <Input value={yieldUnit} onChange={setYieldUnit} placeholder="servings" />)}
       </div>
 
-      {/* Visibility */}
       {field('Visibility',
         <select className={inputCls} style={{ ...inputStyle, cursor: 'pointer' }}
           value={visibility} onChange={e => setVisibility(e.target.value as typeof visibility)}>
@@ -411,11 +326,8 @@ export default function RecipeEditPage() {
         </select>
       )}
 
-      {/* URLs */}
       {field('Image URL', <Input value={imageUrl} onChange={setImageUrl} placeholder="https://…" />, 'Paste a direct image URL')}
       {field('Source URL', <Input value={sourceUrl} onChange={setSourceUrl} placeholder="https://…" />, 'Original recipe page')}
-
-      {/* Notes */}
       {field('Personal notes', <Textarea value={notes} onChange={setNotes} placeholder="Your notes, tweaks, tips…" rows={4} />)}
 
       {/* ── Ingredients ── */}
@@ -430,7 +342,6 @@ export default function RecipeEditPage() {
             <Plus size={12} /> Add
           </button>
         </div>
-
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onIngredientDragEnd}>
           <SortableContext items={ingredients.map(i => i.clientId)} strategy={verticalListSortingStrategy}>
             {ingredients.map((ing) => (
@@ -440,7 +351,6 @@ export default function RecipeEditPage() {
             ))}
           </SortableContext>
         </DndContext>
-
         {ingredients.length === 0 && (
           <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>No ingredients yet. Add one above.</p>
         )}
@@ -458,7 +368,6 @@ export default function RecipeEditPage() {
             <Plus size={12} /> Add
           </button>
         </div>
-
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onStepDragEnd}>
           <SortableContext items={steps.map(s => s.clientId)} strategy={verticalListSortingStrategy}>
             {steps.map((step, idx) => (
@@ -468,11 +377,48 @@ export default function RecipeEditPage() {
             ))}
           </SortableContext>
         </DndContext>
-
         {steps.length === 0 && (
           <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>No steps yet. Add one above.</p>
         )}
       </div>
     </div>
   );
+}
+
+export default function RecipeEditPage() {
+  const { id } = useParams<{ id: string }>();
+
+  const { data: recipe, isLoading: recipeLoading } = useQuery({
+    queryKey: ['recipe', id],
+    queryFn: async () => {
+      const { data } = await api.get<Recipe>(`/api/v1/recipes/${id}`);
+      return data;
+    },
+  });
+
+  const { data: ingredientsData, isLoading: ingredientsLoading } = useQuery({
+    queryKey: ['recipe_ingredients', id],
+    queryFn: async () => {
+      const { data } = await api.get<Ingredient[]>(`/api/v1/recipes/${id}/ingredients`);
+      return data;
+    },
+  });
+
+  const { data: stepsData, isLoading: stepsLoading } = useQuery({
+    queryKey: ['recipe_steps', id],
+    queryFn: async () => {
+      const { data } = await api.get<Step[]>(`/api/v1/recipes/${id}/steps`);
+      return data;
+    },
+  });
+
+  if (recipeLoading || ingredientsLoading || stepsLoading) return (
+    <div className="p-8 text-center" style={{ color: 'var(--color-warm-gray)' }}>Loading…</div>
+  );
+
+  if (!recipe || !ingredientsData || !stepsData) return (
+    <div className="p-8 text-sm" style={{ color: '#b91c1c' }}>Could not load recipe.</div>
+  );
+
+  return <RecipeEditForm id={id!} recipe={recipe} ingredientsData={ingredientsData} stepsData={stepsData} />;
 }
