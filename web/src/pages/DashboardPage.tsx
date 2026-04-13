@@ -20,6 +20,7 @@ interface Recipe {
   visibility: 'private' | 'unlisted' | 'public';
   source_host: string | null;
   parse_confidence: number | null;
+  search_text: string;
 }
 
 function RecipeCard({ recipe, username }: { recipe: Recipe; username?: string }) {
@@ -91,10 +92,8 @@ export default function DashboardPage() {
     },
   });
 
-  const filtered = recipes?.filter((r) =>
-    !search || r.title.toLowerCase().includes(search.toLowerCase()) ||
-    r.cuisine?.toLowerCase().includes(search.toLowerCase())
-  );
+  const q = search.toLowerCase();
+  const filtered = recipes?.filter((r) => !q || r.search_text.includes(q));
 
   return (
     <div className="p-8 max-w-6xl">

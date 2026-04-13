@@ -5,7 +5,7 @@ module Api
       before_action :set_recipe, only: [ :show, :update, :destroy ]
 
       def index
-        recipes = current_user.recipes.active.order(created_at: :desc)
+        recipes = current_user.recipes.active.includes(:ingredients, :steps).order(created_at: :desc)
         render json: serialize(recipes)
       end
 
@@ -82,7 +82,8 @@ module Api
           parse_confidence:   r.parse_confidence,
           parsed_format:      r.parsed_format,
           created_at:         r.created_at,
-          updated_at:         r.updated_at
+          updated_at:         r.updated_at,
+          search_text:        build_search_text(r)
         }
 
         if include_details
@@ -93,6 +94,13 @@ module Api
         end
 
         json
+      end
+
+      def build_search_text(r)
+        parts = [ r.title, r.description, r.cuisine, r.category ]
+        parts += r.ingredients.map { |i| i.ingredient_name || i.raw_text }
+        parts += r.steps.map(&:instruction)
+        parts.compact.join(" ").downcase
       end
 
       def ingredient_json(i)
