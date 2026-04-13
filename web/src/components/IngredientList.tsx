@@ -1,4 +1,4 @@
-import { type Ingredient, formatQuantity } from '../lib/recipeUtils';
+import { type Ingredient, formatQuantity, pluralizeUnit } from '../lib/recipeUtils';
 
 interface Props {
   ingredients: Ingredient[];
@@ -44,10 +44,10 @@ export function IngredientList({ ingredients, scale, checkedIngredients, onToggl
                     <span className="text-sm leading-relaxed" style={{ color: 'var(--color-charcoal)', textDecoration: checked ? 'line-through' : 'none' }}>
                       {ing.weight_grams ? (
                         <>
-                          <strong>{Math.round(ing.weight_grams * scale)} grams </strong>
+                          {(() => { const g = Math.round(ing.weight_grams * scale); return <strong>{g} {pluralizeUnit('gram', g, 1)} </strong>; })()}
                           {(ing.quantity !== null || ing.unit) && (
                             <span style={{ color: 'var(--color-warm-gray)', fontSize: '0.9em' }}>
-                              ({ing.quantity !== null ? `${formatQuantity(ing.quantity, scale)}${ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} ` : ''}{ing.unit ?? ''}){' '}
+                              ({ing.quantity !== null ? `${formatQuantity(ing.quantity, scale)}${ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} ` : ''}{pluralizeUnit(ing.unit, ing.quantity, scale) ?? ''}){' '}
                             </span>
                           )}
                         </>
@@ -56,7 +56,7 @@ export function IngredientList({ ingredients, scale, checkedIngredients, onToggl
                           {ing.quantity !== null && (
                             <strong>{formatQuantity(ing.quantity, scale)}{ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} </strong>
                           )}
-                          {ing.unit && <span>{ing.unit} </span>}
+                          {ing.unit && <span>{pluralizeUnit(ing.unit, ing.quantity, scale)} </span>}
                         </>
                       )}
                       {ing.ingredient_name ?? ing.raw_text}

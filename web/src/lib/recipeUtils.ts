@@ -21,6 +21,24 @@ export interface Step {
   duration_minutes?: number | null;
 }
 
+const UNIT_PLURALS: Record<string, string> = {
+  teaspoon: 'teaspoons', tablespoon: 'tablespoons', cup: 'cups',
+  pint: 'pints', quart: 'quarts', gallon: 'gallons', liter: 'liters',
+  gram: 'grams', kilogram: 'kilograms', ounce: 'ounces', pound: 'pounds',
+  pinch: 'pinches', dash: 'dashes', bunch: 'bunches',
+  handful: 'handfuls', clove: 'cloves', slice: 'slices', piece: 'pieces',
+  sprig: 'sprigs', stalk: 'stalks', can: 'cans', jar: 'jars',
+  package: 'packages', sheet: 'sheets', stick: 'sticks', head: 'heads', drop: 'drops',
+};
+
+// qty=null → assume plural; abbreviations (ml, fl oz, etc.) pass through unchanged
+export function pluralizeUnit(unit: string | null, qty: number | null, scale: number): string | null {
+  if (unit === null) return null;
+  const effective = qty !== null ? qty * scale : 2;
+  if (effective === 1) return unit;
+  return UNIT_PLURALS[unit] ?? unit;
+}
+
 export function formatQuantity(qty: number | null, scale: number): string {
   if (qty === null) return '';
   const val = qty * scale;
