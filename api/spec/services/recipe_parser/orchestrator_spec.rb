@@ -23,9 +23,12 @@ RSpec.describe RecipeParser::Orchestrator do
       expect(result.recipe_attrs[:source_url]).to eq("https://example.com/cake")
     end
 
-    it "returns ingredient strings" do
+    it "returns ingredients as hashes with text and group_name" do
       result = described_class.call(json_ld: json_ld_data)
-      expect(result.raw_ingredients).to include("2 cups flour", "1 cup sugar")
+      expect(result.raw_ingredients).to include(
+        { text: "2 cups flour", group_name: nil },
+        { text: "1 cup sugar",  group_name: nil }
+      )
     end
 
     it "returns steps" do
@@ -83,9 +86,9 @@ RSpec.describe RecipeParser::Orchestrator do
   describe "text: path (plain text paste)" do
     it "calls PlainTextParser and returns result" do
       allow(RecipeParser::PlainTextParser).to receive(:parse).and_return({
-        recipe_attrs:    { title: "Pasta", source_url: nil },
-        raw_ingredients: [ "200g pasta" ],
-        steps:           [ { text: "Boil pasta.", section: nil } ]
+        recipe_attrs: { title: "Pasta", source_url: nil },
+        ingredients:  [ { text: "200g pasta", group_name: nil } ],
+        steps:        [ { text: "Boil pasta.", section: nil } ]
       })
 
       result = described_class.call(text: "Pasta recipe text")
@@ -95,9 +98,9 @@ RSpec.describe RecipeParser::Orchestrator do
 
     it "attaches source_url from extension when text comes with url" do
       allow(RecipeParser::PlainTextParser).to receive(:parse).and_return({
-        recipe_attrs:    { title: "Pasta", source_url: nil },
-        raw_ingredients: [],
-        steps:           []
+        recipe_attrs: { title: "Pasta", source_url: nil },
+        ingredients:  [],
+        steps:        []
       })
 
       result = described_class.call(text: "Pasta recipe", url: "https://example.com/pasta")
@@ -106,7 +109,7 @@ RSpec.describe RecipeParser::Orchestrator do
 
     it "does NOT fetch url when text is also provided" do
       allow(RecipeParser::PlainTextParser).to receive(:parse).and_return({
-        recipe_attrs: { title: "Pasta" }, raw_ingredients: [], steps: []
+        recipe_attrs: { title: "Pasta" }, ingredients: [], steps: []
       })
       expect(RecipeParser::Fetcher).not_to receive(:fetch)
       described_class.call(text: "some text", url: "https://example.com")

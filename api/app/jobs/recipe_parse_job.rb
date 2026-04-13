@@ -15,11 +15,12 @@ class RecipeParseJob < ApplicationJob
     recipe = ActiveRecord::Base.transaction do
       r = job.user.recipes.create!(result.recipe_attrs.merge(status: "saved"))
 
-      result.raw_ingredients.each_with_index do |raw_text, i|
-        parsed = IngredientParser::Parser.parse(raw_text)
+      result.raw_ingredients.each_with_index do |ing, i|
+        parsed = IngredientParser::Parser.parse(ing[:text])
         r.ingredients.create!(
           raw_text:          parsed.raw_text,
           position:          i,
+          group_name:        ing[:group_name],
           quantity:          parsed.quantity,
           quantity_max:      parsed.quantity_max,
           unit:              parsed.unit,

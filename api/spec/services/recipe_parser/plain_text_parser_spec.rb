@@ -10,8 +10,16 @@ RSpec.describe RecipeParser::PlainTextParser do
         "content" => {
           "title"       => "Simple Pasta",
           "description" => "Quick weeknight pasta.",
-          "ingredients" => [ "200g pasta", "2 cloves garlic", "3 tbsp olive oil" ],
-          "steps"       => [ "Boil pasta.", "Fry garlic.", "Toss and serve." ]
+          "ingredients" => [
+            { "text" => "200g pasta",        "section" => nil },
+            { "text" => "2 cloves garlic",   "section" => nil },
+            { "text" => "3 tbsp olive oil",  "section" => nil }
+          ],
+          "steps" => [
+            { "text" => "Boil pasta.",     "section" => nil },
+            { "text" => "Fry garlic.",     "section" => nil },
+            { "text" => "Toss and serve.", "section" => nil }
+          ]
         }.to_json
       }
     }
@@ -32,12 +40,15 @@ RSpec.describe RecipeParser::PlainTextParser do
       expect(result[:recipe_attrs][:title]).to eq("Simple Pasta")
     end
 
-    it "returns ingredient strings" do
+    it "returns ingredients as hashes with text and group_name" do
       result = described_class.parse("Some pasted recipe text")
-      expect(result[:ingredients]).to include("200g pasta", "2 cloves garlic")
+      expect(result[:ingredients]).to include(
+        { text: "200g pasta",      group_name: nil },
+        { text: "2 cloves garlic", group_name: nil }
+      )
     end
 
-    it "returns steps as hashes with text and nil section" do
+    it "returns steps as hashes with text and section" do
       result = described_class.parse("Some pasted recipe text")
       expect(result[:steps].first).to eq({ text: "Boil pasta.", section: nil })
     end

@@ -53,8 +53,11 @@ RSpec.describe RecipeParser::Normalizer do
       expect(normalize(raw)[:recipe_attrs][:prep_time_minutes]).to eq(75)
     end
 
-    it "extracts ingredients as plain strings" do
-      expect(normalize(base_raw)[:ingredients]).to eq([ "2 cups flour", "1 tsp salt" ])
+    it "extracts ingredients as hashes with text and group_name" do
+      expect(normalize(base_raw)[:ingredients]).to eq([
+        { text: "2 cups flour", group_name: nil },
+        { text: "1 tsp salt",   group_name: nil }
+      ])
     end
 
     it "extracts steps" do

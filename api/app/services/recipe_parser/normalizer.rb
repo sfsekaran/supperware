@@ -88,12 +88,13 @@ module RecipeParser
     end
 
     def self.extract_ingredients(raw)
-      Array(raw["recipeIngredient"]).filter_map do |item|
+      strings = Array(raw["recipeIngredient"]).filter_map do |item|
         next if item.blank?
         # Some sites use PropertyValue objects instead of plain strings
         text = item.is_a?(Hash) ? (item["value"] || item["name"]) : item.to_s
         text.strip.presence
       end
+      SectionDetector.detect(strings)
     end
 
     def self.extract_steps(raw)

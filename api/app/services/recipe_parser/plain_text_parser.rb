@@ -20,18 +20,23 @@ module RecipeParser
       A quick weeknight pasta with plenty of garlic.
       Prep: 5 mins. Cook: 15 mins. Serves 2.
       Ingredients
+      For the pasta:
       200g spaghetti
       4 cloves garlic, sliced
+      For the sauce:
       3 tbsp olive oil
-      salt and pepper
+      1 tbsp butter
       Instructions
+      Make the pasta
       1. Cook spaghetti in salted boiling water until al dente.
-      2. Meanwhile, fry the garlic in olive oil over low heat until golden.
-      3. Drain pasta, toss with garlic oil, season and serve.
+      2. Drain and set aside.
+      Finish the dish
+      3. Fry the garlic in olive oil over low heat until golden.
+      4. Toss pasta with garlic oil, season and serve.
       ---
 
       OUTPUT EXAMPLE:
-      {"title":"Garlic Pasta","description":"A quick weeknight pasta with plenty of garlic.","cuisine":null,"prep_time_minutes":5,"cook_time_minutes":15,"total_time_minutes":20,"yield_quantity":2,"yield_unit":"servings","yield_description":null,"ingredients":["200g spaghetti","4 cloves garlic, sliced","3 tbsp olive oil","salt and pepper"],"steps":["Cook spaghetti in salted boiling water until al dente.","Meanwhile, fry the garlic in olive oil over low heat until golden.","Drain pasta, toss with garlic oil, season and serve."]}
+      {"title":"Garlic Pasta","description":"A quick weeknight pasta with plenty of garlic.","cuisine":null,"prep_time_minutes":5,"cook_time_minutes":15,"total_time_minutes":20,"yield_quantity":2,"yield_unit":"servings","yield_description":null,"ingredients":[{"text":"200g spaghetti","section":"For the pasta"},{"text":"4 cloves garlic, sliced","section":"For the pasta"},{"text":"3 tbsp olive oil","section":"For the sauce"},{"text":"1 tbsp butter","section":"For the sauce"}],"steps":[{"text":"Cook spaghetti in salted boiling water until al dente.","section":"Make the pasta"},{"text":"Drain and set aside.","section":"Make the pasta"},{"text":"Fry the garlic in olive oil over low heat until golden.","section":"Finish the dish"},{"text":"Toss pasta with garlic oil, season and serve.","section":"Finish the dish"}]}
 
       Now extract from the user's text, following these rules:
       - Each numbered instruction must be its own separate entry in the steps array
@@ -40,6 +45,8 @@ module RecipeParser
       - Ignore navigation, ads, reviews, and any non-recipe content
       - The title is the dish name (near "Recipe by" or before the ingredients) — never a brand or site name
       - Use null for any field not present in the text
+      - If there are no sections, use null for the section field on every item
+      - Never invent section names — only use section headings that appear in the original text
     PROMPT
 
     def self.parse(text)
@@ -69,9 +76,9 @@ module RecipeParser
           { role: "user",   content: "Extract the recipe from this text:\n\n#{text}" }
         ],
         options: {
-          num_ctx:     8192,  # context window — enough for a full page of pasted text
-          num_predict: 4096,  # max output tokens — enough for a long recipe
-          temperature: 0.0   # deterministic, no creativity needed
+          num_ctx:     8192,
+          num_predict: 4096,
+          temperature: 0.0
         }
       })
 
@@ -82,7 +89,6 @@ module RecipeParser
     end
 
     def self.extract_json(raw)
-      # Strip markdown fences and find the outermost JSON object
       cleaned = raw.gsub(/```(?:json)?/, "").strip
       start   = cleaned.index("{")
       finish  = cleaned.rindex("}")
@@ -92,22 +98,42 @@ module RecipeParser
       raise "Could not parse Ollama JSON response: #{e.message}"
     end
 
+    def self.parse_ingredients(raw)
+      Array(raw).filter_map do |item|
+        next if item.blank?
+        if item.is_a?(Hash)
+          text = item["text"].to_s.presence
+          next unless text
+          { text: text, group_name: item["section"] }
+        else
+          text = item.to_s.presence
+          next unless text
+          { text: text, group_name: nil }
+        end
+      end
+    end
+
     def self.split_steps(steps)
       steps.flat_map do |s|
-        text = s.to_s.strip
+        if s.is_a?(Hash)
+          text    = s["text"].to_s.strip
+          section = s["section"]
+        else
+          text    = s.to_s.strip
+          section = nil
+        end
         next [] if text.empty?
-        # If the model lumped numbered steps into one string, split them
+
         if text.match?(/\d+\.\s+\S/)
           text.split(/(?=\d+\.\s+)/).map { |p| p.gsub(/\A\d+\.\s*/, "").strip }.reject(&:empty?)
+              .map { |t| { text: t, section: section } }
         else
-          [ text ]
+          [ { text: text, section: section } ]
         end
       end
     end
 
     def self.build_result(json, original_text: nil)
-      # Fallback: find first line that looks like a recipe title
-      # Skip nav cruft: short lines, all-caps nav words, "skip to", etc.
       nav_pattern = /\A(skip|view|sign|search|shop|learn|recipes?|categories|collections|features|impact|visit|save \$|recipe by)\b/i
       fallback_title = original_text&.each_line
         &.map(&:strip)
@@ -117,7 +143,6 @@ module RecipeParser
           l.length < 4 ||
           l.match?(nav_pattern) ||
           (words.length == 1 && l == l.upcase) ||
-          # repeated words = nav duplication (e.g. "King Arthur King Arthur")
           words.length > 1 && words == words.each_slice(words.length / 2).to_a.uniq.flatten
         }
         &.first
@@ -136,8 +161,8 @@ module RecipeParser
           parsed_format:      "text_paste",
           parse_confidence:   nil
         },
-        ingredients: Array(json["ingredients"]).filter_map(&:presence),
-        steps:       split_steps(Array(json["steps"])).map { |s| { text: s, section: nil } },
+        ingredients: parse_ingredients(json["ingredients"]),
+        steps:       split_steps(Array(json["steps"])),
         warnings:    [],
         error:       nil
       }

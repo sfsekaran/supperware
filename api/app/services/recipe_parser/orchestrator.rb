@@ -1,5 +1,6 @@
 require_relative "fetcher"
 require_relative "json_ld_extractor"
+require_relative "section_detector"
 require_relative "normalizer"
 require_relative "plain_text_parser"
 

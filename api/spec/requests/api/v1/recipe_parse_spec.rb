@@ -18,7 +18,10 @@ RSpec.describe "Api::V1::RecipeParse", type: :request do
   let(:success_result) do
     RecipeParser::ParseResult.new(
       recipe_attrs:     { title: "Chocolate Cake", source_url: "https://example.com" },
-      raw_ingredients:  [ "2 cups flour", "1 cup sugar" ],
+      raw_ingredients:  [
+        { text: "2 cups flour", group_name: nil },
+        { text: "1 cup sugar",  group_name: nil }
+      ],
       steps:            [ { text: "Mix and bake.", section: nil } ],
       parse_confidence: 0.9,
       parsed_format:    "json_ld",
@@ -66,7 +69,7 @@ RSpec.describe "Api::V1::RecipeParse", type: :request do
       it "uses og_image as fallback primary_image_url" do
         result_no_image = RecipeParser::ParseResult.new(
           recipe_attrs:    { title: "Cake", source_url: nil, primary_image_url: nil },
-          raw_ingredients: [],
+          raw_ingredients: [], # no ingredients
           steps:           [],
           parse_confidence: 0.8,
           parsed_format:   "json_ld",

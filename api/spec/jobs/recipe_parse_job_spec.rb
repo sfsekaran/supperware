@@ -11,7 +11,10 @@ RSpec.describe RecipeParseJob, type: :job do
         source_url:  "https://example.com/recipe",
         description: nil
       },
-      raw_ingredients:  [ "2 cups flour", "1 cup sugar" ],
+      raw_ingredients:  [
+        { text: "2 cups flour", group_name: nil },
+        { text: "1 cup sugar",  group_name: nil }
+      ],
       steps:            [ { text: "Mix and bake.", section: nil } ],
       parse_confidence: 0.9,
       parsed_format:    "json_ld",
