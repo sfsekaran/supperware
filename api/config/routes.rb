@@ -28,7 +28,8 @@ Rails.application.routes.draw do
       end
 
       get "search",   to: "search#index"
-      get "settings", to: "settings#show"
+      get   "settings", to: "settings#show"
+      patch "settings", to: "settings#update"
 
       # Admin
       namespace :admin do

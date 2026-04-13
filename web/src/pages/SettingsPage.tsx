@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Copy, Check, Key } from 'lucide-react';
 import { useAuthStore, type AuthState } from '../stores/authStore';
 import { api } from '../lib/api';
@@ -7,14 +7,20 @@ import { api } from '../lib/api';
 export default function SettingsPage() {
   const user = useAuthStore((s: AuthState) => s.user);
   const [copied, setCopied] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: settings } = useQuery({
     queryKey: ['settings'],
     queryFn: async () => {
-      // Fetch full user profile with api_token
-      const { data } = await api.get<{ api_token: string }>('/api/v1/settings');
+      const { data } = await api.get<{ api_token: string; public_profile: boolean }>('/api/v1/settings');
       return data;
     },
+  });
+
+  const profileMutation = useMutation({
+    mutationFn: (public_profile: boolean) =>
+      api.patch('/api/v1/settings', { settings: { public_profile } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['settings'] }),
   });
 
   const copyToken = async () => {
@@ -58,24 +64,49 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Public profile link */}
+      {/* Public profile */}
       <section className="mb-8">
         <h2 className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--color-warm-gray)' }}>
           Public profile
         </h2>
         <div className="p-5 rounded-xl" style={{ background: 'white', border: '1px solid var(--color-border)' }}>
-          <p className="text-sm mb-3" style={{ color: 'var(--color-warm-gray)' }}>
-            Your public recipe page is visible to anyone with the link.
-          </p>
-          <a
-            href={`/u/${user?.username}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium no-underline hover:underline"
-            style={{ color: 'var(--color-terra)' }}
-          >
-            supperware.app/u/{user?.username} →
-          </a>
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div>
+              <p className="text-sm font-medium mb-0.5" style={{ color: 'var(--color-charcoal)' }}>
+                {settings?.public_profile ? 'Profile is public' : 'Profile is private'}
+              </p>
+              <p className="text-sm" style={{ color: 'var(--color-warm-gray)' }}>
+                {settings?.public_profile
+                  ? 'Anyone can view your profile and public recipes.'
+                  : 'Your profile and recipes are hidden from the public.'}
+              </p>
+            </div>
+            <button
+              onClick={() => profileMutation.mutate(!settings?.public_profile)}
+              disabled={profileMutation.isPending || settings === undefined}
+              style={{
+                width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                background: settings?.public_profile ? 'var(--color-sage)' : 'var(--color-warm-gray-light)',
+                position: 'relative', flexShrink: 0, transition: 'background 0.2s',
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 3, width: 18, height: 18, borderRadius: '50%', background: 'white',
+                transition: 'left 0.2s', left: settings?.public_profile ? 23 : 3,
+              }} />
+            </button>
+          </div>
+          {settings?.public_profile && (
+            <a
+              href={`/u/${user?.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium no-underline hover:underline"
+              style={{ color: 'var(--color-terra)' }}
+            >
+              supperware.app/u/{user?.username} →
+            </a>
+          )}
         </div>
       </section>
 
