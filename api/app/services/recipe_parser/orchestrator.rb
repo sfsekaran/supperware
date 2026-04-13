@@ -7,7 +7,7 @@ require_relative "plain_text_parser"
 module RecipeParser
   ParseResult = Struct.new(
     :recipe_attrs, :raw_ingredients, :steps,
-    :parse_confidence, :parsed_format, :warnings, :error,
+    :parse_confidence, :parsed_format, :warnings, :error, :page_text,
     keyword_init: true
   )
 
@@ -65,7 +65,8 @@ module RecipeParser
           steps:            normalized[:steps],
           parse_confidence: confidence,
           parsed_format:    "json_ld",
-          warnings:         normalized[:warnings]
+          warnings:         normalized[:warnings],
+          page_text:        extract_page_text(html)
         )
       else
         # TODO: Phase 2 — add Microdata, RDFa, HTML heuristic extractors
@@ -94,6 +95,37 @@ module RecipeParser
         parsed_format:    "text_paste",
         warnings:         result[:warnings]
       )
+    end
+
+    # Converts HTML to structured plain text, preserving heading/bold hierarchy
+    # for section context. Strips noise (nav, footer, script, style, ads).
+    # Truncated to ~6000 chars so it fits in SectionRefiner's prompt context.
+    def self.extract_page_text(html, max_chars: 6000)
+      doc = Nokogiri::HTML(html)
+
+      # Remove noise elements
+      doc.css("script, style, nav, footer, header, aside, [aria-hidden='true'], " \
+              ".ad, .ads, .advertisement, .social-share, .comments").remove
+
+      output = []
+      doc.css("body *").each do |node|
+        next unless node.element?
+        tag = node.name.downcase
+        text = node.children.select(&:text?).map(&:text).join(" ").strip
+        next if text.empty?
+
+        case tag
+        when "h1" then output << "\n# #{text}"
+        when "h2" then output << "\n## #{text}"
+        when "h3" then output << "\n### #{text}"
+        when "h4", "h5", "h6" then output << "\n#### #{text}"
+        when "strong", "b" then output << "**#{text}**"
+        when "li" then output << "- #{text}"
+        when "p" then output << text
+        end
+      end
+
+      output.join("\n").squeeze("\n").strip.truncate(max_chars, omission: "…")
     end
 
     def self.compute_confidence(normalized, format:)

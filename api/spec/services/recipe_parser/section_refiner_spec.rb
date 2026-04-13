@@ -45,6 +45,7 @@ RSpec.describe RecipeParser::SectionRefiner do
       )
   end
 
+
   describe ".refine" do
     context "when Ollama returns section labels" do
       before do
@@ -117,6 +118,66 @@ RSpec.describe RecipeParser::SectionRefiner do
         result = described_class.refine(base_result)
         expect(result.raw_ingredients).to eq(ingredients)
         expect(result.steps).to eq(steps)
+      end
+    end
+
+    context "when page_text is present" do
+      let(:result_with_page) do
+        RecipeParser::ParseResult.new(
+          recipe_attrs:     { title: "Layer Cake" },
+          raw_ingredients:  ingredients,
+          steps:            steps,
+          parse_confidence: 0.9,
+          parsed_format:    "json_ld",
+          warnings:         [],
+          page_text:        "## For the Cake\n**Batter**\n## For the Frosting"
+        )
+      end
+
+      before do
+        stub_ollama(
+          ingredient_sections: [ "For the cake", "For the cake", "For the frosting", "For the frosting" ],
+          step_sections:       [ "Make the cake", "Make the cake", "Make the frosting" ]
+        )
+      end
+
+      it "includes page_text in the prompt" do
+        described_class.refine(result_with_page)
+        expect(a_request(:post, "#{ollama_url}/api/chat").with { |req|
+          body = JSON.parse(req.body)
+          body.dig("messages", 0, "content").include?("ORIGINAL PAGE TEXT") &&
+            body.dig("messages", 0, "content").include?("For the Cake")
+        }).to have_been_made
+      end
+
+      it "uses a larger num_ctx" do
+        described_class.refine(result_with_page)
+        expect(a_request(:post, "#{ollama_url}/api/chat").with { |req|
+          JSON.parse(req.body).dig("options", "num_ctx") == 8192
+        }).to have_been_made
+      end
+    end
+
+    context "when page_text is absent" do
+      before do
+        stub_ollama(
+          ingredient_sections: [ nil, nil, nil, nil ],
+          step_sections:       [ nil, nil, nil ]
+        )
+      end
+
+      it "uses the compact num_ctx" do
+        described_class.refine(base_result)
+        expect(a_request(:post, "#{ollama_url}/api/chat").with { |req|
+          JSON.parse(req.body).dig("options", "num_ctx") == 2048
+        }).to have_been_made
+      end
+
+      it "does not include page_text section in prompt" do
+        described_class.refine(base_result)
+        expect(a_request(:post, "#{ollama_url}/api/chat").with { |req|
+          !JSON.parse(req.body).dig("messages", 0, "content").include?("ORIGINAL PAGE TEXT")
+        }).to have_been_made
       end
     end
 

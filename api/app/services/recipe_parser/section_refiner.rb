@@ -19,7 +19,7 @@ module RecipeParser
       return result if already_sectioned?(ingredients, steps)
       return result if ingredients.empty? && steps.empty?
 
-      response = call_ollama(ingredients, steps)
+      response = call_ollama(ingredients, steps, result.page_text)
       apply_sections(result, response, ingredients, steps)
     rescue => e
       Rails.logger.warn("[SectionRefiner] Skipping section refinement: #{e.message}")
@@ -33,9 +33,15 @@ module RecipeParser
         steps.any? { |s| s[:section].present? }
     end
 
-    def self.call_ollama(ingredients, steps)
+    def self.call_ollama(ingredients, steps, page_text = nil)
       ing_list  = ingredients.each_with_index.map { |i, n| "#{n + 1}. #{i[:text]}" }.join("\n")
       step_list = steps.each_with_index.map { |s, n| "#{n + 1}. #{s[:text]}" }.join("\n")
+
+      page_text_section = page_text.present? ? <<~TEXT : ""
+
+        ORIGINAL PAGE TEXT (use headings and bold markers to infer sections):
+        #{page_text}
+      TEXT
 
       prompt = <<~PROMPT
         You are a recipe section detector. Identify logical sections in the ingredients and steps below.
@@ -49,13 +55,16 @@ module RecipeParser
         - Only identify sections clearly implied by the recipe structure
         - If there are no distinct sections, return all nulls
         - Never invent section names not supported by the recipe content
-
+        #{page_text_section}
         INGREDIENTS (#{ingredients.length}):
         #{ing_list}
 
         STEPS (#{steps.length}):
         #{step_list}
       PROMPT
+
+      # Use larger context window when page_text is provided for heading context
+      num_ctx = page_text.present? ? 8192 : 2048
 
       conn = Faraday.new(url: OLLAMA_URL) do |f|
         f.options.timeout = 120
@@ -69,7 +78,7 @@ module RecipeParser
         format:     "json",
         keep_alive: ENV.fetch("OLLAMA_KEEP_ALIVE", "30m"),
         messages:   [ { role: "user", content: prompt } ],
-        options:    { num_ctx: 2048, num_predict: 512, temperature: 0.0 }
+        options:    { num_ctx: num_ctx, num_predict: 512, temperature: 0.0 }
       })
 
       raise "Ollama error #{res.status}: #{res.body.dig("error") || res.body}" unless res.success?

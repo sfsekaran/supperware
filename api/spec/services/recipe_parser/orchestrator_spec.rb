@@ -55,10 +55,41 @@ RSpec.describe RecipeParser::Orchestrator do
       expect(result.recipe_attrs[:title]).to eq("Chocolate Cake")
     end
 
-    it "returns error when HTML has no structured data" do
+    it "populates page_text from the HTML body" do
+      html = <<~HTML
+        <html><head><script type="application/ld+json">#{json_ld_data.to_json}</script></head>
+        <body>
+          <h2>For the Cake</h2>
+          <p>Mix ingredients.</p>
+          <strong>Frosting</strong>
+        </body></html>
+      HTML
+      result = described_class.call(html: html, url: "https://example.com/cake")
+      expect(result.page_text).to include("## For the Cake")
+      expect(result.page_text).to include("**Frosting**")
+    end
+
+    it "returns nil page_text when HTML has no structured data" do
       result = described_class.call(html: "<html><body>No recipe here</body></html>")
       expect(result.error).to be_present
       expect(result.warnings).to include("no_structured_data")
+    end
+
+    it "strips script/style noise from page_text" do
+      html = <<~HTML
+        <html>
+          <head>
+            <script type="application/ld+json">#{json_ld_data.to_json}</script>
+            <script>alert('noise')</script>
+            <style>.foo { color: red }</style>
+          </head>
+          <body><h2>Instructions</h2></body>
+        </html>
+      HTML
+      result = described_class.call(html: html, url: "https://example.com/cake")
+      expect(result.page_text).not_to include("alert")
+      expect(result.page_text).not_to include("color: red")
+      expect(result.page_text).to include("## Instructions")
     end
   end
 
