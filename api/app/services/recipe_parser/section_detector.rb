@@ -8,7 +8,7 @@ module RecipeParser
       /\Afor\s+the\s+/i,
       /\Afor\s+\w/i,
       /\Ato\s+make\b/i,
-      /\Amake\s+the\b/i,
+      /\Amake\s+the\b/i
     ].freeze
 
     # Takes an array of raw ingredient strings.
