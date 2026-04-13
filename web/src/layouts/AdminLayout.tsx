@@ -4,13 +4,17 @@ import { Users, ChefHat } from 'lucide-react';
 export default function AdminLayout() {
   return (
     <div className="flex min-h-dvh" style={{ background: 'var(--color-cream)' }}>
-      {/* Sidebar */}
+      {/* Sidebar — hidden on mobile */}
       <aside
-        className="w-52 flex-col py-6 px-4 shrink-0 flex"
+        className="app-sidebar w-52 flex-col py-6 px-4 shrink-0 flex"
         style={{ background: '#2d2d2d', color: 'white' }}
       >
         <div className="mb-6">
-          <Link to="/dashboard" className="flex items-center gap-2 no-underline opacity-60 hover:opacity-100 transition-opacity mb-1" style={{ color: 'white', fontSize: '0.75rem' }}>
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2 no-underline opacity-60 hover:opacity-100 transition-opacity mb-1"
+            style={{ color: 'white', fontSize: '0.75rem' }}
+          >
             ← Back to app
           </Link>
           <div className="flex items-center gap-2 mt-4">
@@ -41,9 +45,36 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar — mobile only */}
+        <header
+          className="app-top-bar flex items-center gap-3 px-4"
+          style={{
+            background: '#2d2d2d',
+            color: 'white',
+            height: '52px',
+            flexShrink: 0,
+          }}
+        >
+          <Link
+            to="/dashboard"
+            style={{ color: 'white', opacity: 0.6, fontSize: '0.8rem', textDecoration: 'none' }}
+          >
+            ← App
+          </Link>
+          <span style={{ opacity: 0.3 }}>|</span>
+          <NavLink
+            to="/admin/users"
+            style={{ color: 'white', fontSize: '0.85rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <Users size={15} /> Users
+          </NavLink>
+        </header>
+
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

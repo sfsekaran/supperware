@@ -36,13 +36,15 @@ h1, h2, h3 {
   font-family: var(--font-display);
 }
 
-/* Layout: sidebar vs bottom tab bar */
+/* Layout: sidebar vs bottom tab bar / top bar */
 .app-sidebar     { display: none; }
 .app-bottom-nav  { display: flex; }
+.app-top-bar     { display: flex; }
 
 @media (min-width: 768px) {
   .app-sidebar    { display: flex; }
   .app-bottom-nav { display: none; }
+  .app-top-bar    { display: none; }
 }
 
 /* Cooking mode step transition */

@@ -62,11 +62,12 @@ export default function AdminUserDetailPage() {
         display: 'flex',
         gap: '1.5rem',
         alignItems: 'flex-start',
+        flexWrap: 'wrap',
       }}>
         {user.avatar_url && (
           <img src={user.avatar_url} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
         )}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0 }}>
               {user.display_name ?? user.username}
@@ -80,26 +81,26 @@ export default function AdminUserDetailPage() {
           {user.bio && (
             <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', opacity: 0.75 }}>{user.bio}</p>
           )}
-          <div style={{ fontSize: '0.8rem', opacity: 0.5 }}>
+          <div style={{ fontSize: '0.8rem', opacity: 0.5, marginBottom: user.public_profile ? '0.75rem' : 0 }}>
             Joined {new Date(user.created_at).toLocaleDateString()} · {user.recipe_count} recipe{user.recipe_count !== 1 ? 's' : ''}
           </div>
+          {user.public_profile && (
+            <a
+              href={`/u/${user.username}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                fontSize: '0.85rem', fontWeight: 500,
+                padding: '0.4rem 0.9rem', borderRadius: '8px',
+                background: 'var(--color-sage)', color: 'white',
+                textDecoration: 'none', whiteSpace: 'nowrap',
+              }}
+            >
+              View profile <ExternalLink size={13} />
+            </a>
+          )}
         </div>
-        {user.public_profile && (
-          <a
-            href={`/u/${user.username}`}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-              fontSize: '0.85rem', fontWeight: 500,
-              padding: '0.4rem 0.9rem', borderRadius: '8px',
-              background: 'var(--color-sage)', color: 'white',
-              textDecoration: 'none', whiteSpace: 'nowrap',
-            }}
-          >
-            View profile <ExternalLink size={13} />
-          </a>
-        )}
       </div>
 
       {/* Recipes */}
