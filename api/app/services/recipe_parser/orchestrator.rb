@@ -97,31 +97,30 @@ module RecipeParser
       )
     end
 
-    # Converts HTML to structured plain text, preserving heading/bold hierarchy
-    # for section context. Strips noise (nav, footer, script, style, ads).
-    # Truncated to ~6000 chars so it fits in SectionRefiner's prompt context.
+    # Converts HTML to structured plain text preserving heading hierarchy for
+    # section context. Uses node.text (full subtree) so headings with nested
+    # <span> tags are captured. Selects only semantic leaf-ish elements to avoid
+    # duplicating text from parent/child pairs. Strips noise first.
     def self.extract_page_text(html, max_chars: 6000)
       doc = Nokogiri::HTML(html)
-
-      # Remove noise elements
-      doc.css("script, style, nav, footer, header, aside, [aria-hidden='true'], " \
-              ".ad, .ads, .advertisement, .social-share, .comments").remove
+      doc.css("script, style, nav, footer, header, aside, " \
+              "[aria-hidden='true'], .ad, .ads, .advertisement, " \
+              ".social-share, .comments").remove
 
       output = []
-      doc.css("body *").each do |node|
-        next unless node.element?
-        tag = node.name.downcase
-        text = node.children.select(&:text?).map(&:text).join(" ").strip
+      # Select headings, direct list items, and short paragraphs only.
+      # ul>li / ol>li avoids double-counting deeply nested lists.
+      doc.css("h1, h2, h3, h4, h5, h6, ul > li, ol > li, p").each do |node|
+        text = node.text.gsub(/\s+/, " ").strip
         next if text.empty?
 
-        case tag
+        case node.name.downcase
         when "h1" then output << "\n# #{text}"
         when "h2" then output << "\n## #{text}"
         when "h3" then output << "\n### #{text}"
         when "h4", "h5", "h6" then output << "\n#### #{text}"
-        when "strong", "b" then output << "**#{text}**"
-        when "li" then output << "- #{text}"
-        when "p" then output << text
+        when "li"  then output << "- #{text}"
+        when "p"   then output << text if text.length < 400
         end
       end
 

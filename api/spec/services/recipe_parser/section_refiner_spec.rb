@@ -90,22 +90,89 @@ RSpec.describe RecipeParser::SectionRefiner do
       end
     end
 
-    context "when sections are already present from heuristic" do
+    context "when steps already have sections from JSON-LD" do
+      before do
+        stub_ollama(
+          ingredient_sections: [ "For the cake", "For the cake" ],
+          # LLM returns the same section name for pre-sectioned steps, new one for unsectioned
+          step_sections:       [ "Bake", "Bake", "Finish" ]
+        )
+      end
+
       let(:pre_sectioned) do
         RecipeParser::ParseResult.new(
           recipe_attrs:     { title: "Cake" },
-          raw_ingredients:  [ { text: "2 cups flour", group_name: "For the cake" } ],
-          steps:            [ { text: "Bake.", section: nil } ],
+          raw_ingredients:  [ { text: "2 cups flour", group_name: nil }, { text: "1 cup sugar", group_name: nil } ],
+          steps:            [
+            { text: "Bake.", section: "Bake" },
+            { text: "Cool.", section: "Bake" },
+            { text: "Serve.", section: nil }
+          ],
           parse_confidence: 0.9,
           parsed_format:    "json_ld",
           warnings:         []
         )
       end
 
-      it "skips the Ollama call and returns the result unchanged" do
-        expect(Faraday).not_to receive(:new)
+      it "calls Ollama to fill in ingredient sections" do
         result = described_class.refine(pre_sectioned)
-        expect(result).to eq(pre_sectioned)
+        expect(result.raw_ingredients.map { |i| i[:group_name] }).to eq([ "For the cake", "For the cake" ])
+      end
+
+      it "preserves existing step sections from JSON-LD even if LLM returns different value" do
+        result = described_class.refine(pre_sectioned)
+        expect(result.steps[0][:section]).to eq("Bake")
+        expect(result.steps[1][:section]).to eq("Bake")
+      end
+
+      it "applies LLM section to steps that had no section" do
+        result = described_class.refine(pre_sectioned)
+        expect(result.steps[2][:section]).to eq("Finish")
+      end
+
+      it "passes steps with [existing:] hints to Ollama" do
+        described_class.refine(pre_sectioned)
+        expect(a_request(:post, "#{ollama_url}/api/chat").with { |req|
+          JSON.parse(req.body).dig("messages", 0, "content").include?("[existing: Bake]")
+        }).to have_been_made
+      end
+    end
+
+    context "when ingredients already have heuristic group_names" do
+      # LLM returns wrong sections for the heuristic-sectioned ingredients
+      before do
+        stub_ollama(
+          ingredient_sections: [ "Wrong", "Wrong", "AlsoWrong", "AlsoWrong" ],
+          step_sections:       [ "Bake", "Bake", "Finish" ]
+        )
+      end
+
+      let(:presectioned_result) do
+        RecipeParser::ParseResult.new(
+          recipe_attrs:    { title: "Layer Cake" },
+          raw_ingredients: [
+            { text: "2 cups flour",  group_name: "Cake" },
+            { text: "1 cup sugar",   group_name: "Cake" },
+            { text: "1 cup butter",  group_name: "Frosting" },
+            { text: "2 cups cream",  group_name: "Frosting" }
+          ],
+          steps:            steps,
+          parse_confidence: 0.9,
+          parsed_format:    "json_ld",
+          warnings:         []
+        )
+      end
+
+      it "shows [section: X] in the prompt for already-sectioned ingredients" do
+        described_class.refine(presectioned_result)
+        expect(a_request(:post, "#{ollama_url}/api/chat").with { |req|
+          JSON.parse(req.body).dig("messages", 0, "content").include?("[section: Cake]")
+        }).to have_been_made
+      end
+
+      it "does not overwrite existing group_names even when LLM disagrees" do
+        result = described_class.refine(presectioned_result)
+        expect(result.raw_ingredients.map { |i| i[:group_name] }).to eq([ "Cake", "Cake", "Frosting", "Frosting" ])
       end
     end
 

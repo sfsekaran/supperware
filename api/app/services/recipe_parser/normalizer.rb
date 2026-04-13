@@ -87,6 +87,13 @@ module RecipeParser
       raw.to_s.split(/,\s*/)
     end
 
+    # Words that, when present in a section name, identify it as equipment/tools
+    # rather than actual ingredients. Items under such sections are dropped.
+    EQUIPMENT_SECTION_WORDS = %w[
+      tool tools equipment supplies gear utensil utensils
+      scale peel tray stone steel pan sheet rack thermometer
+    ].to_set.freeze
+
     def self.extract_ingredients(raw)
       strings = Array(raw["recipeIngredient"]).filter_map do |item|
         next if item.blank?
@@ -94,7 +101,12 @@ module RecipeParser
         text = item.is_a?(Hash) ? (item["value"] || item["name"]) : item.to_s
         text.strip.presence
       end
-      SectionDetector.detect(strings)
+      SectionDetector.detect(strings).reject { |ing| equipment_section?(ing[:group_name]) }
+    end
+
+    def self.equipment_section?(name)
+      return false if name.blank?
+      name.downcase.split(/\W+/).any? { |w| EQUIPMENT_SECTION_WORDS.include?(w) }
     end
 
     def self.extract_steps(raw)

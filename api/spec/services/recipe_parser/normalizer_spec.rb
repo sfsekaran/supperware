@@ -126,5 +126,33 @@ RSpec.describe RecipeParser::Normalizer do
       expect(result[:ingredients]).to eq([])
       expect(result[:steps]).to eq([])
     end
+
+    it "filters out ingredients under equipment/tool sections" do
+      raw = base_raw.merge(
+        "recipeIngredient" => [
+          "2 cups flour",
+          "Recommended Baking Tools",
+          "6 quarts - Cambro Tub",
+          "Baking Steel",
+          "Pizza Peel"
+        ]
+      )
+      result = normalize(raw)
+      texts = result[:ingredients].map { |i| i[:text] }
+      expect(texts).to eq([ "2 cups flour" ])
+      expect(texts).not_to include("6 quarts - Cambro Tub")
+    end
+
+    it "filters out ingredients under a 'Food Scale' section" do
+      raw = base_raw.merge(
+        "recipeIngredient" => [
+          "1 cup water",
+          "Food Scale",
+          "6 quarts - Cambro Tub"
+        ]
+      )
+      result = normalize(raw)
+      expect(result[:ingredients].map { |i| i[:text] }).to eq([ "1 cup water" ])
+    end
   end
 end

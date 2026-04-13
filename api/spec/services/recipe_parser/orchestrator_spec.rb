@@ -55,18 +55,20 @@ RSpec.describe RecipeParser::Orchestrator do
       expect(result.recipe_attrs[:title]).to eq("Chocolate Cake")
     end
 
-    it "populates page_text from the HTML body" do
+    it "populates page_text from the HTML body including span-wrapped headings" do
       html = <<~HTML
         <html><head><script type="application/ld+json">#{json_ld_data.to_json}</script></head>
         <body>
-          <h2>For the Cake</h2>
+          <h2><span>For the Cake</span></h2>
           <p>Mix ingredients.</p>
-          <strong>Frosting</strong>
+          <h3>For the Frosting</h3>
+          <ul><li>1 cup butter</li></ul>
         </body></html>
       HTML
       result = described_class.call(html: html, url: "https://example.com/cake")
       expect(result.page_text).to include("## For the Cake")
-      expect(result.page_text).to include("**Frosting**")
+      expect(result.page_text).to include("### For the Frosting")
+      expect(result.page_text).to include("- 1 cup butter")
     end
 
     it "returns nil page_text when HTML has no structured data" do

@@ -42,10 +42,39 @@ RSpec.describe RecipeParser::SectionDetector do
       expect(result.first[:group_name]).to eq("Base")
     end
 
-    it "does not treat a regular ingredient as a header" do
+    it "detects bare title-case labels with no quantity as section headers" do
+      input = [ "Levain", "50 grams starter", "75 grams flour", "Final Dough", "300 grams bread flour" ]
+      result = described_class.detect(input)
+      expect(result).to eq([
+        { text: "50 grams starter",      group_name: "Levain" },
+        { text: "75 grams flour",        group_name: "Levain" },
+        { text: "300 grams bread flour", group_name: "Final Dough" }
+      ])
+    end
+
+    it "detects multi-word title-case labels like 'Tomato Sauce' and 'Final Dough'" do
+      input = [ "Tomato Sauce", "1 can tomatoes", "8 grams salt" ]
+      result = described_class.detect(input)
+      expect(result.map { |i| i[:group_name] }).to all(eq("Tomato Sauce"))
+    end
+
+    it "does not treat a regular lowercase ingredient as a header" do
       input = [ "salt", "pepper", "olive oil" ]
       result = described_class.detect(input)
       expect(result.map { |i| i[:group_name] }).to all(be_nil)
+    end
+
+    it "does not treat an ingredient with a quantity as a header" do
+      input = [ "2 cups flour", "1 tsp salt" ]
+      result = described_class.detect(input)
+      expect(result.map { |i| i[:group_name] }).to all(be_nil)
+    end
+
+    it "does not treat an ingredient containing a unit word as a header" do
+      # 'Cups' starts with capital but contains a unit word — not a header
+      input = [ "Cups of flour" ]
+      result = described_class.detect(input)
+      expect(result.first[:group_name]).to be_nil
     end
 
     it "handles an empty list" do
