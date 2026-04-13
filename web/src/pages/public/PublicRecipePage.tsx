@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Users, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Clock, ArrowLeft, ExternalLink } from 'lucide-react';
 import { api } from '../../lib/api';
+import { type Ingredient, type Step } from '../../lib/recipeUtils';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { WakeLockToggle } from '../../components/WakeLockToggle';
+import { IngredientList } from '../../components/IngredientList';
+import { StepList } from '../../components/StepList';
+import { ServingScaler } from '../../components/ServingScaler';
 
 interface PublicRecipe {
   id: number; title: string; description: string | null;
@@ -12,19 +16,15 @@ interface PublicRecipe {
   prep_time_minutes: number | null; cook_time_minutes: number | null; total_time_minutes: number | null;
   yield_quantity: number | null; yield_unit: string | null; cuisine: string | null;
   diet_tags: string[];
-  ingredients: { id: number; position: number; group_name: string | null; raw_text: string; quantity: number | null; quantity_max: number | null; unit: string | null; ingredient_name: string | null; preparation_notes: string | null; is_optional: boolean }[];
-  steps: { id: number; position: number; section_name: string | null; instruction: string }[];
-}
-
-function formatQty(qty: number | null, scale: number) {
-  if (qty === null) return '';
-  const val = qty * scale;
-  return val === Math.floor(val) ? String(val) : val.toFixed(1);
+  ingredients: Ingredient[];
+  steps: Step[];
 }
 
 export default function PublicRecipePage() {
   const { username, slug } = useParams<{ username: string; slug: string }>();
   const [scale, setScale] = useState(1);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
   const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
   const wakeLockSupported = 'wakeLock' in navigator;
   useWakeLock(wakeLockEnabled);
@@ -36,6 +36,12 @@ export default function PublicRecipePage() {
       return data;
     },
   });
+
+  const toggleIngredient = (id: number) =>
+    setCheckedIngredients((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
+
+  const toggleStep = (id: number) =>
+    setCheckedSteps((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   if (isLoading) return <div className="p-8 text-sm" style={{ color: 'var(--color-warm-gray)' }}>Loading…</div>;
   if (!recipe) return <div className="p-8 text-sm" style={{ color: '#b91c1c' }}>Recipe not found.</div>;
@@ -66,8 +72,8 @@ export default function PublicRecipePage() {
           </span>
         )}
         {recipe.yield_quantity && (
-          <span className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full" style={{ background: 'var(--color-cream-dark)', color: 'var(--color-charcoal)' }}>
-            <Users size={13} /> {recipe.yield_quantity} {recipe.yield_unit ?? 'servings'}
+          <span className="text-sm px-3 py-1.5 rounded-full" style={{ background: 'var(--color-cream-dark)', color: 'var(--color-charcoal)' }}>
+            {recipe.yield_quantity} {recipe.yield_unit ?? 'servings'}
           </span>
         )}
         {recipe.cuisine && (
@@ -84,60 +90,37 @@ export default function PublicRecipePage() {
         )}
       </div>
 
-      {/* Serving scaler */}
       {recipe.yield_quantity && (
-        <div className="flex items-center gap-4 p-4 rounded-xl mb-8" style={{ background: 'var(--color-cream-dark)', border: '1px solid var(--color-border)' }}>
-          <span className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
-            Serves {Math.round(recipe.yield_quantity * scale)} {recipe.yield_unit ?? ''}
-          </span>
-          <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => setScale((s) => Math.max(0.25, +(s - 0.25).toFixed(2)))}
-              className="w-8 h-8 rounded-full flex items-center justify-center font-bold"
-              style={{ background: 'var(--color-terra)', color: 'white', border: 'none', cursor: 'pointer' }}>−</button>
-            <span className="text-sm w-10 text-center" style={{ color: 'var(--color-charcoal)' }}>{scale}×</span>
-            <button onClick={() => setScale((s) => +(s + 0.25).toFixed(2))}
-              className="w-8 h-8 rounded-full flex items-center justify-center font-bold"
-              style={{ background: 'var(--color-terra)', color: 'white', border: 'none', cursor: 'pointer' }}>+</button>
-          </div>
-        </div>
+        <ServingScaler
+          yieldQuantity={recipe.yield_quantity}
+          yieldUnit={recipe.yield_unit}
+          scale={scale}
+          onScaleChange={setScale}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-        {/* Ingredients */}
         <div className="md:col-span-2">
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 600, color: 'var(--color-charcoal)', marginBottom: '1rem' }}>
             Ingredients
           </h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} className="space-y-2">
-            {recipe.ingredients.map((ing: PublicRecipe['ingredients'][number]) => (
-              <li key={ing.id} className="text-sm leading-relaxed" style={{ color: 'var(--color-charcoal)' }}>
-                {ing.quantity !== null && <strong>{formatQty(ing.quantity, scale)}{ing.quantity_max ? `–${formatQty(ing.quantity_max, scale)}` : ''} </strong>}
-                {ing.unit && <span>{ing.unit} </span>}
-                {ing.ingredient_name ?? ing.raw_text}
-                {ing.preparation_notes && <em style={{ color: 'var(--color-warm-gray)' }}>, {ing.preparation_notes}</em>}
-              </li>
-            ))}
-          </ul>
+          <IngredientList
+            ingredients={recipe.ingredients}
+            scale={scale}
+            checkedIngredients={checkedIngredients}
+            onToggle={toggleIngredient}
+          />
         </div>
 
-        {/* Steps */}
         <div className="md:col-span-3">
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 600, color: 'var(--color-charcoal)', marginBottom: '1rem' }}>
             Instructions
           </h2>
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0 }} className="space-y-4">
-            {recipe.steps.map((step: PublicRecipe['steps'][number], i: number) => (
-              <li key={step.id} className="flex items-start gap-4">
-                <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold"
-                  style={{ background: 'var(--color-cream-dark)', color: 'var(--color-warm-gray)' }}>
-                  {i + 1}
-                </span>
-                <p className="text-sm leading-relaxed pt-0.5" style={{ color: 'var(--color-charcoal)', margin: 0 }}>
-                  {step.instruction}
-                </p>
-              </li>
-            ))}
-          </ol>
+          <StepList
+            steps={recipe.steps}
+            checkedSteps={checkedSteps}
+            onToggle={toggleStep}
+          />
         </div>
       </div>
 

@@ -39,7 +39,7 @@ module Api
             ingredients: r.ingredients.map { |i|
               { id: i.id, position: i.position, group_name: i.group_name,
                 raw_text: i.raw_text, quantity: i.quantity, quantity_max: i.quantity_max,
-                unit: i.unit, ingredient_name: i.ingredient_name,
+                unit: i.unit, weight_grams: i.weight_grams, ingredient_name: i.ingredient_name,
                 preparation_notes: i.preparation_notes, is_optional: i.is_optional }
             },
             steps: r.steps.map { |s|
