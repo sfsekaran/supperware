@@ -26,6 +26,7 @@ RSpec.describe RecipeParseJob, type: :job do
     context "on success" do
       before do
         allow(RecipeParser::Orchestrator).to receive(:call).and_return(success_result)
+        allow(RecipeParser::SectionRefiner).to receive(:refine) { |r| r }
       end
 
       it "transitions parse job to done" do

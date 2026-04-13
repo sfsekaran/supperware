@@ -7,6 +7,10 @@ class RecipeParseJob < ApplicationJob
 
     result = RecipeParser::Orchestrator.call(url: job.url, text: job.raw_text)
 
+    if result.error.nil? && result.parsed_format == "json_ld"
+      result = RecipeParser::SectionRefiner.refine(result)
+    end
+
     if result.error
       job.fail!(result.error)
       return
