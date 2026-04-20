@@ -87,6 +87,7 @@ module RecipeParser
         model:      OLLAMA_MODEL,
         stream:     false,
         format:     "json",
+        think:      false,
         keep_alive: ENV.fetch("OLLAMA_KEEP_ALIVE", "30m"),
         messages:   [ { role: "user", content: prompt } ],
         options:    { num_ctx: num_ctx, num_predict: 512, temperature: 0.0 }
@@ -96,7 +97,8 @@ module RecipeParser
       content = res.body.dig("message", "content") or raise "Empty response from Ollama"
       Rails.logger.debug("[SectionRefiner] Response: #{content.truncate(300)}")
 
-      cleaned = content.gsub(/```(?:json)?/, "").strip
+      # Strip <think>...</think> reasoning blocks emitted by Qwen 3 and similar models
+      cleaned = content.gsub(/<think>.*?<\/think>/m, "").gsub(/```(?:json)?/, "").strip
       start   = cleaned.index("{")
       finish  = cleaned.rindex("}")
       raise "No JSON object found in Ollama response" unless start && finish

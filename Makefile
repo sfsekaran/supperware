@@ -56,6 +56,7 @@ dev-bg: db
 
 stop-bg:
 	@pkill -f "rails server" 2>/dev/null || true
+	@pkill -f "puma" 2>/dev/null || true
 	@pkill -f "sidekiq" 2>/dev/null || true
 	@pkill -f "vite" 2>/dev/null || true
 	@echo "Background processes stopped."

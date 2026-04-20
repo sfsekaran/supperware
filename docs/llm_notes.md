@@ -6,7 +6,22 @@ for the Ollama-based LLM integrations in Supperware.
 ## Current setup
 
 - **Runtime:** Ollama, running locally
-- **Model:** `llama3.1:8b` (configured via `OLLAMA_SECTION_MODEL` / `OLLAMA_MODEL` env vars)
+- **Model:** `qwen3.5:9b` (configured via `OLLAMA_MODEL` env var)
+
+### Disabling Qwen3 thinking mode
+
+Qwen3 models use an extended thinking mode by default. To disable it via the API, pass
+`think: false` as a **top-level key** in the `/api/chat` request body (not inside `options`).
+This maps to the `--think=false` CLI flag.
+
+`num_think: 0` does not reliably disable thinking — it caps the thinking token budget but
+the model still emits thinking tokens and may exhaust the budget before producing content.
+
+With `think: false` at the top level, `qwen3.5:35b-a3b` responds in ~10s with correct
+sections and zero thinking overhead.
+
+**`qwen3.5:35b-a3b`** is a Mixture of Experts model: 35B total params, ~3B active per token.
+Its Ollama model ID is identical to `qwen3.5:35b` (same file, different tag).
 - **Uses:**
   - `PlainTextParser` — full recipe extraction from pasted text (`text:` async job path)
   - `SectionRefiner` — section label detection for JSON-LD/HTML parsed recipes (`url:` async job path)

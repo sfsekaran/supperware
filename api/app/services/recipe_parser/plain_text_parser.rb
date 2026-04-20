@@ -70,6 +70,7 @@ module RecipeParser
         model:      OLLAMA_MODEL,
         stream:     false,
         format:     "json",
+        think:      false,
         keep_alive: ENV.fetch("OLLAMA_KEEP_ALIVE", "30m"),
         messages: [
           { role: "system", content: PROMPT },

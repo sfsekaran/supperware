@@ -176,6 +176,29 @@ RSpec.describe RecipeParser::SectionRefiner do
       end
     end
 
+    context "when the model returns a <think> reasoning block (Qwen 3 style)" do
+      before do
+        stub_request(:post, "#{ollama_url}/api/chat")
+          .to_return(
+            status:  200,
+            body:    {
+              "message" => {
+                "content" => "<think>\nLet me analyze the ingredients...\n{ fake json }\n</think>\n" \
+                             "#{{ "ingredient_sections" => [ "For the cake", "For the cake", "For the frosting", "For the frosting" ], "step_sections" => [ "Make the cake", "Make the cake", "Make the frosting" ] }.to_json}"
+              }
+            }.to_json,
+            headers: { "Content-Type" => "application/json" }
+          )
+      end
+
+      it "strips the think block and parses the actual JSON" do
+        result = described_class.refine(base_result)
+        expect(result.raw_ingredients.map { |i| i[:group_name] }).to eq(
+          [ "For the cake", "For the cake", "For the frosting", "For the frosting" ]
+        )
+      end
+    end
+
     context "when Ollama is unavailable" do
       before do
         stub_request(:post, "#{ollama_url}/api/chat").to_timeout
