@@ -1,15 +1,10 @@
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, ArrowLeft, ExternalLink, Trash2, Globe, Lock, Pencil } from 'lucide-react';
+import { ArrowLeft, Globe, Lock, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { api } from '../lib/api';
 import { type Ingredient, type Step } from '../lib/recipeUtils';
-import { useWakeLock, wakeLockSupported } from '../hooks/useWakeLock';
-import { useRecipeProgress } from '../hooks/useRecipeProgress';
-import { WakeLockToggle } from '../components/WakeLockToggle';
-import { IngredientList } from '../components/IngredientList';
-import { StepList } from '../components/StepList';
-import { ServingScaler } from '../components/ServingScaler';
+import { RecipeView } from '../components/RecipeView';
 import { useAuthStore } from '../stores/authStore';
 import type { AuthState } from '../stores/authStore';
 
@@ -29,14 +24,8 @@ export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const username = useAuthStore((s: AuthState) => s.user?.username);
-  const [scale, setScale] = useState(1);
-  const { checkedIngredients, checkedSteps, toggleIngredient, toggleStep, clearProgress } = useRecipeProgress(id);
-  const hasProgress = checkedIngredients.size > 0 || checkedSteps.size > 0;
-  const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const queryClient = useQueryClient();
-
-  useWakeLock(wakeLockEnabled);
 
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ['recipe', id],
@@ -64,7 +53,6 @@ export default function RecipeDetailPage() {
     },
   });
 
-
   if (isLoading) return (
     <div className="p-8">
       <div className="animate-pulse space-y-4">
@@ -78,20 +66,31 @@ export default function RecipeDetailPage() {
     <div className="p-8 text-sm" style={{ color: '#b91c1c' }}>Could not load recipe.</div>
   );
 
+  const visibilityChip = (
+    <>
+      {recipe.visibility === 'public' && username && (
+        <a
+          href={`/u/${username}/${recipe.slug}`}
+          target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1 text-xs no-underline hover:underline"
+          style={{ color: 'var(--color-warm-gray)' }}
+        >
+          <Globe size={11} /> Public page
+        </a>
+      )}
+    </>
+  );
+
+  const personalNotes = recipe.personal_notes ? (
+    <div className="p-5 rounded-xl" style={{ background: 'var(--color-cream-dark)', border: '1px solid var(--color-border)' }}>
+      <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-charcoal)' }}>My notes</h3>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-warm-gray)' }}>{recipe.personal_notes}</p>
+    </div>
+  ) : null;
+
   return (
     <div className="max-w-3xl mx-auto p-6 pb-24">
-      {/* Back + actions */}
-      {hasProgress && (
-        <div className="flex justify-end mb-2">
-          <button
-            onClick={clearProgress}
-            className="text-xs px-3 py-1.5 rounded-full transition-colors hover:opacity-80"
-            style={{ background: '#e8f0e5', color: 'var(--color-sage)', border: '1px solid var(--color-sage-light)', cursor: 'pointer' }}>
-            Clear progress
-          </button>
-        </div>
-      )}
-
+      {/* Action bar */}
       <div className="flex items-center justify-between mb-6">
         <button onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 text-sm hover:opacity-70 transition-opacity"
@@ -100,7 +99,6 @@ export default function RecipeDetailPage() {
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Edit */}
           <button
             onClick={() => navigate(`/recipes/${id}/edit`)}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
@@ -108,7 +106,6 @@ export default function RecipeDetailPage() {
             <Pencil size={12} /> Edit
           </button>
 
-          {/* Publish / unpublish */}
           <button
             onClick={() => visibilityMutation.mutate(recipe.visibility === 'public' ? 'private' : 'public')}
             disabled={visibilityMutation.isPending}
@@ -125,7 +122,6 @@ export default function RecipeDetailPage() {
             {recipe.visibility === 'public' ? 'Public' : 'Private'}
           </button>
 
-          {/* Delete */}
           {confirmDelete ? (
             <div className="flex items-center gap-1.5">
               <span className="text-xs" style={{ color: 'var(--color-warm-gray)' }}>Delete?</span>
@@ -157,103 +153,12 @@ export default function RecipeDetailPage() {
         </div>
       </div>
 
-      {/* Hero image */}
-      {recipe.primary_image_url && (
-        <img src={recipe.primary_image_url} alt={recipe.title}
-          className="w-full object-cover rounded-2xl mb-6" style={{ maxHeight: 320 }}
-          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-      )}
-
-      {/* Title & meta */}
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 600, lineHeight: 1.2, color: 'var(--color-charcoal)', marginBottom: '0.75rem' }}>
-        {recipe.title}
-      </h1>
-
-      {recipe.description && (
-        <p className="text-base mb-5 leading-relaxed" style={{ color: 'var(--color-warm-gray)' }}>{recipe.description}</p>
-      )}
-
-      {/* Chips row */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {recipe.total_time_minutes && (
-          <span className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full" style={{ background: 'var(--color-cream-dark)', color: 'var(--color-charcoal)' }}>
-            <Clock size={13} /> {recipe.total_time_minutes} min
-          </span>
-        )}
-        {recipe.cuisine && (
-          <span className="text-sm px-3 py-1.5 rounded-full" style={{ background: 'var(--color-cream-dark)', color: 'var(--color-charcoal)' }}>
-            {recipe.cuisine}
-          </span>
-        )}
-        {recipe.diet_tags?.map((tag: string) => (
-          <span key={tag} className="text-sm px-3 py-1.5 rounded-full" style={{ background: '#e8f0e5', color: 'var(--color-sage)' }}>{tag}</span>
-        ))}
-        {recipe.source_url && (
-          <a href={recipe.source_url} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs no-underline hover:underline"
-            style={{ color: 'var(--color-warm-gray)' }}>
-            <ExternalLink size={11} /> {recipe.source_host}
-          </a>
-        )}
-        {recipe.visibility === 'public' && username && (
-          <a
-            href={`/u/${username}/${recipe.slug}`}
-            target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs no-underline hover:underline"
-            style={{ color: 'var(--color-warm-gray)' }}
-          >
-            <Globe size={11} /> Public page
-          </a>
-        )}
-        {wakeLockSupported && (
-          <WakeLockToggle enabled={wakeLockEnabled} onToggle={() => setWakeLockEnabled((v) => !v)} />
-        )}
-      </div>
-
-      {/* Serving scaler */}
-      {recipe.yield_quantity && (
-        <ServingScaler
-          yieldQuantity={recipe.yield_quantity}
-          yieldUnit={recipe.yield_unit}
-          scale={scale}
-          onScaleChange={setScale}
-          yieldDescription={recipe.yield_description}
-        />
-      )}
-
-      {/* Two-column layout for wide screens */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-        <div className="md:col-span-2">
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 600, color: 'var(--color-charcoal)', marginBottom: '1rem' }}>
-            Ingredients
-          </h2>
-          <IngredientList
-            ingredients={recipe.ingredients}
-            scale={scale}
-            checkedIngredients={checkedIngredients}
-            onToggle={toggleIngredient}
-          />
-        </div>
-
-        <div className="md:col-span-3">
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 600, color: 'var(--color-charcoal)', marginBottom: '1rem' }}>
-            Instructions
-          </h2>
-          <StepList
-            steps={recipe.steps}
-            checkedSteps={checkedSteps}
-            onToggle={toggleStep}
-          />
-        </div>
-      </div>
-
-      {/* Personal notes */}
-      {recipe.personal_notes && (
-        <div className="mt-8 p-5 rounded-xl" style={{ background: 'var(--color-cream-dark)', border: '1px solid var(--color-border)' }}>
-          <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-charcoal)' }}>My notes</h3>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-warm-gray)' }}>{recipe.personal_notes}</p>
-        </div>
-      )}
+      <RecipeView
+        recipe={recipe}
+        progressKey={id!}
+        extraChips={visibilityChip}
+        footer={personalNotes}
+      />
     </div>
   );
 }
