@@ -5,6 +5,7 @@ import { Clock, ArrowLeft, ExternalLink } from 'lucide-react';
 import { api } from '../../lib/api';
 import { type Ingredient, type Step } from '../../lib/recipeUtils';
 import { useWakeLock } from '../../hooks/useWakeLock';
+import { useRecipeProgress } from '../../hooks/useRecipeProgress';
 import { WakeLockToggle } from '../../components/WakeLockToggle';
 import { IngredientList } from '../../components/IngredientList';
 import { StepList } from '../../components/StepList';
@@ -23,8 +24,9 @@ interface PublicRecipe {
 export default function PublicRecipePage() {
   const { username, slug } = useParams<{ username: string; slug: string }>();
   const [scale, setScale] = useState(1);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
-  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
+  const { checkedIngredients, checkedSteps, toggleIngredient, toggleStep } = useRecipeProgress(
+    username && slug ? `${username}_${slug}` : undefined,
+  );
   const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
   const wakeLockSupported = 'wakeLock' in navigator;
   useWakeLock(wakeLockEnabled);
@@ -37,11 +39,6 @@ export default function PublicRecipePage() {
     },
   });
 
-  const toggleIngredient = (id: number) =>
-    setCheckedIngredients((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
-
-  const toggleStep = (id: number) =>
-    setCheckedSteps((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   if (isLoading) return <div className="p-8 text-sm" style={{ color: 'var(--color-warm-gray)' }}>Loading…</div>;
   if (!recipe) return <div className="p-8 text-sm" style={{ color: '#b91c1c' }}>Recipe not found.</div>;
