@@ -5,6 +5,7 @@ import { Clock, ArrowLeft, ExternalLink, Trash2, Globe, Lock, Pencil } from 'luc
 import { api } from '../lib/api';
 import { type Ingredient, type Step } from '../lib/recipeUtils';
 import { useWakeLock, wakeLockSupported } from '../hooks/useWakeLock';
+import { useRecipeProgress } from '../hooks/useRecipeProgress';
 import { WakeLockToggle } from '../components/WakeLockToggle';
 import { IngredientList } from '../components/IngredientList';
 import { StepList } from '../components/StepList';
@@ -29,8 +30,8 @@ export default function RecipeDetailPage() {
   const navigate = useNavigate();
   const username = useAuthStore((s: AuthState) => s.user?.username);
   const [scale, setScale] = useState(1);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
-  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
+  const { checkedIngredients, checkedSteps, toggleIngredient, toggleStep, clearProgress } = useRecipeProgress(id);
+  const hasProgress = checkedIngredients.size > 0 || checkedSteps.size > 0;
   const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const queryClient = useQueryClient();
@@ -43,6 +44,7 @@ export default function RecipeDetailPage() {
       const { data } = await api.get<Recipe>(`/api/v1/recipes/${id}`);
       return data;
     },
+    refetchOnWindowFocus: false,
   });
 
   const deleteMutation = useMutation({
@@ -62,11 +64,6 @@ export default function RecipeDetailPage() {
     },
   });
 
-  const toggleIngredient = (id: number) =>
-    setCheckedIngredients((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
-
-  const toggleStep = (id: number) =>
-    setCheckedSteps((s) => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; });
 
   if (isLoading) return (
     <div className="p-8">
@@ -84,6 +81,17 @@ export default function RecipeDetailPage() {
   return (
     <div className="max-w-3xl mx-auto p-6 pb-24">
       {/* Back + actions */}
+      {hasProgress && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={clearProgress}
+            className="text-xs px-3 py-1.5 rounded-full transition-colors hover:opacity-80"
+            style={{ background: '#e8f0e5', color: 'var(--color-sage)', border: '1px solid var(--color-sage-light)', cursor: 'pointer' }}>
+            Clear progress
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <button onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 text-sm hover:opacity-70 transition-opacity"
