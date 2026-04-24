@@ -16,9 +16,19 @@ function saveSet(key: string, set: Set<number>) {
   } catch { /* quota exceeded — ignore */ }
 }
 
+function loadScale(key: string): number {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? Math.max(0.25, parseFloat(raw)) : 1;
+  } catch {
+    return 1;
+  }
+}
+
 export function useRecipeProgress(recipeId: string | undefined) {
-  const ingKey  = `recipe_${recipeId}_ingredients`;
-  const stepKey = `recipe_${recipeId}_steps`;
+  const ingKey   = `recipe_${recipeId}_ingredients`;
+  const stepKey  = `recipe_${recipeId}_steps`;
+  const scaleKey = `recipe_${recipeId}_scale`;
 
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     () => loadSet(ingKey),
@@ -26,6 +36,12 @@ export function useRecipeProgress(recipeId: string | undefined) {
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(
     () => loadSet(stepKey),
   );
+  const [scale, setScaleState] = useState<number>(() => loadScale(scaleKey));
+
+  const setScale = useCallback((value: number) => {
+    setScaleState(value);
+    try { localStorage.setItem(scaleKey, String(value)); } catch { /* ignore */ }
+  }, [scaleKey]);
 
   const toggleIngredient = useCallback((id: number) => {
     setCheckedIngredients((prev) => {
@@ -48,8 +64,13 @@ export function useRecipeProgress(recipeId: string | undefined) {
   const clearProgress = useCallback(() => {
     setCheckedIngredients(new Set());
     setCheckedSteps(new Set());
-    try { localStorage.removeItem(ingKey); localStorage.removeItem(stepKey); } catch { /* ignore */ }
-  }, [ingKey, stepKey]);
+    setScaleState(1);
+    try {
+      localStorage.removeItem(ingKey);
+      localStorage.removeItem(stepKey);
+      localStorage.removeItem(scaleKey);
+    } catch { /* ignore */ }
+  }, [ingKey, stepKey, scaleKey]);
 
-  return { checkedIngredients, checkedSteps, toggleIngredient, toggleStep, clearProgress };
+  return { checkedIngredients, checkedSteps, toggleIngredient, toggleStep, clearProgress, scale, setScale };
 }

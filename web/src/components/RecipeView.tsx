@@ -32,9 +32,8 @@ interface RecipeViewProps {
 }
 
 export function RecipeView({ recipe, progressKey, extraChips, footer }: RecipeViewProps) {
-  const [scale, setScale] = useState(1);
   const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
-  const { checkedIngredients, checkedSteps, toggleIngredient, toggleStep, clearProgress } =
+  const { checkedIngredients, checkedSteps, toggleIngredient, toggleStep, clearProgress, scale, setScale } =
     useRecipeProgress(progressKey);
   const hasProgress = checkedIngredients.size > 0 || checkedSteps.size > 0;
 
