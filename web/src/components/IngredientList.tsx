@@ -44,7 +44,7 @@ export function IngredientList({ ingredients, scale, checkedIngredients, onToggl
                     <span className="text-sm leading-relaxed" style={{ color: 'var(--color-charcoal)', textDecoration: checked ? 'line-through' : 'none' }}>
                       {ing.weight_grams ? (
                         <>
-                          {(() => { const g = Math.round(ing.weight_grams * scale); return <strong>{g} {pluralizeUnit('gram', g, 1)} </strong>; })()}
+                          {(() => { const g = ing.weight_grams * scale; return <strong>{Math.round(g)} {pluralizeUnit('gram', g, 1)} </strong>; })()}
                           {(ing.quantity !== null || ing.unit) && (
                             <span style={{ color: 'var(--color-warm-gray)', fontSize: '0.9em' }}>
                               ({ing.quantity !== null ? `${formatQuantity(ing.quantity, scale)}${ing.quantity_max ? `–${formatQuantity(ing.quantity_max, scale)}` : ''} ` : ''}{pluralizeUnit(ing.unit, ing.quantity, scale) ?? ''}){' '}

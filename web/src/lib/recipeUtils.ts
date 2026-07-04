@@ -43,5 +43,7 @@ export function formatQuantity(qty: number | null, scale: number): string {
   if (qty === null) return '';
   const val = qty * scale;
   if (val === Math.floor(val)) return String(val);
-  return val.toFixed(1).replace(/\.0$/, '');
+  // Use toFixed(2) to avoid IEEE 754 rounding issues (0.15.toFixed(1) → '0.1')
+  // then strip trailing zeros: '0.150' → '0.15', '1.500' → '1.5'
+  return val.toFixed(2).replace(/\.?0+$/, '');
 }
