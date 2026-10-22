@@ -5,7 +5,8 @@ module Api
       before_action :set_recipe, only: [ :show, :update, :destroy ]
 
       def index
-        recipes = current_user.recipes.active.includes(:ingredients, :steps).order(created_at: :desc)
+        recipes = current_user.recipes.active.includes(:ingredients, :steps)
+        recipes = apply_sort(recipes)
         render json: serialize(recipes)
       end
 
@@ -94,6 +95,17 @@ module Api
         end
 
         json
+      end
+
+      def apply_sort(recipes)
+        case params[:sort]
+        when "cook_time"
+          recipes.order("cook_time_minutes DESC NULLS LAST")
+        when "cook_time_asc"
+          recipes.order("cook_time_minutes ASC NULLS FIRST")
+        else
+          recipes.order(created_at: :desc)
+        end
       end
 
       def build_search_text(r)

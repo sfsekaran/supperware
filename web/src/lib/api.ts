@@ -48,7 +48,10 @@ async function request<T>(
 }
 
 export const api = {
-  get:    <T>(path: string)                => request<T>(path),
+  get:    <T>(path: string, opts?: { params?: Record<string, string> }) => {
+    const url = opts?.params ? `${path}?${new URLSearchParams(opts.params).toString()}` : path;
+    return request<T>(url);
+  },
   post:   <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST',  body: JSON.stringify(body) }),
   patch:  <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string)                => request<T>(path, { method: 'DELETE' }),

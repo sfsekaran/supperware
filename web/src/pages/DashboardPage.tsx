@@ -15,6 +15,7 @@ interface Recipe {
   category: string | null;
   diet_tags: string[];
   total_time_minutes: number | null;
+  cook_time_minutes: number | null;
   primary_image_url: string | null;
   is_favorite: boolean;
   visibility: 'private' | 'unlisted' | 'public';
@@ -82,12 +83,13 @@ function RecipeCard({ recipe, username }: { recipe: Recipe; username?: string })
 
 export default function DashboardPage() {
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'default' | 'cook_time' | 'cook_time_asc'>('default');
   const username = useAuthStore((s: AuthState) => s.user?.username);
 
   const { data: recipes, isLoading, error } = useQuery({
-    queryKey: ['recipes'],
+    queryKey: ['recipes', sort],
     queryFn: async () => {
-      const { data } = await api.get<Recipe[]>('/api/v1/recipes');
+      const { data } = await api.get<Recipe[]>('/api/v1/recipes', { params: sort !== 'default' ? { sort } : undefined });
       return data;
     },
   });
@@ -125,17 +127,29 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6 max-w-sm">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-warm-gray)' }} />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search recipes…"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+      {/* Search + Sort */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="relative flex-1 max-w-sm">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-warm-gray)' }} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search recipes…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+            style={{ border: '1.5px solid var(--color-border)', background: 'white', color: 'var(--color-charcoal)' }}
+          />
+        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as typeof sort)}
+          className="px-3 py-2.5 rounded-xl text-sm outline-none cursor-pointer"
           style={{ border: '1.5px solid var(--color-border)', background: 'white', color: 'var(--color-charcoal)' }}
-        />
+        >
+          <option value="default">Sort: Newest</option>
+          <option value="cook_time">Cook Time ↓</option>
+          <option value="cook_time_asc">Cook Time ↑</option>
+        </select>
       </div>
 
       {/* States */}
